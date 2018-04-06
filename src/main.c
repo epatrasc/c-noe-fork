@@ -11,17 +11,20 @@ void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value)
 {
 	my_pid = getpid();
 	my_ppid = getppid();
-	printf("PARENT: PID=%d, PPID=%d, fork_value=%d\n",
+	printf("* PARENT: PID=%d, PPID=%d, fork_value=%d\n",
 		   my_pid, my_ppid, value);
 }
 
-void run_child(pid_t my_pid, pid_t my_ppid, pid_t value)
+void run_child(char name)
 {
-	my_pid = getpid();
-	my_ppid = getppid();
-	printf("CHILD:  PID=%d, PPID=%d, fork_value=%d\n",
-		   my_pid, my_ppid, value);
-	exit(EXIT_SUCCESS);
+	if (name == 'A')
+	{
+		execve("./exec/child_a.exe", NULL, NULL);
+	}
+	else
+	{
+		execve("./exec/child_b.exe", NULL, NULL);
+	}
 }
 
 int main()
@@ -29,6 +32,7 @@ int main()
 	int i;
 	pid_t my_pid, my_ppid, value;
 	int num_of_process = INIT_PEOPLE;
+	char name= 'A';
 
 	// check popolation limit
 	if (num_of_process > 20)
@@ -39,7 +43,8 @@ int main()
 
 	for (i = 0; i < INIT_PEOPLE; i++)
 	{
-		printf("LOOP: %d", i+1);
+		printf("Name: %c | ", name);
+		printf("LOOP: %d\n", i + 1);
 		switch (value = fork())
 		{
 		case -1:
@@ -49,14 +54,16 @@ int main()
 
 		case 0:
 			/* Perform actions specific to child */
-			run_child(my_pid, my_ppid, value);
+			run_child(name);
 			break;
 
 		default:
 			/* Perform actions specific to parent */
 			run_parent(my_pid, my_ppid, value);
+			name= name == 'A' ? 'B' : 'A';
 			break;
 		}
+		sleep(1);
 	}
 
 	exit(EXIT_SUCCESS);
