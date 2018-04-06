@@ -1,9 +1,8 @@
 echo off
 mkdir exec
 echo "Starting compiling: src\*.c"
-for %%f in ("src\*.c") do (
-    set file=%%~nf
-    echo "compiling : "%file% && gcc ./src/%file%.c -o ./exec/%file%.exe
-    echo "command: gcc ./src/%file%.c -o ./exec/%file%.exe"
+for %%f in (.\src\*.c) do (
+    echo "compiling : "%%~nf && gcc ./src/%%~nf.c -o ./exec/%%~nf.exe
+    echo "command: gcc ./src/%%~nf.c -o ./exec/%%~nf.exe"
 )
 echo "Compiling finished"
