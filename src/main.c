@@ -4,23 +4,54 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 const int MAX_POPOLATION = 20;
 const int INIT_PEOPLE = 5;
-const char CHILD_A_PATH [] = {"./exec/child_a.exe"};
-const char CHILD_B_PATH []= {"./exec/child_b.exe"};
+const int MIN_CHAR = 65; // A
+const int MAX_CHAR = 90; // Z
+const char CHILD_A_PATH[] = {"./exec/child_a.exe"};
+const char CHILD_B_PATH[] = {"./exec/child_b.exe"};
 
 struct individuo
 {
 	char tipo;
-	char nome [10];
+	char *nome;
 	unsigned long genoma;
 };
 
-char roll_type()
+unsigned long gen_genoma()
+{
+	sleep(0.001);
+	srand(time(0));
+	return (char)rand() % (ULONG_MAX + 1 - 2) + 2;
+}
+
+char gen_name()
+{
+	sleep(0.001);
+	srand(time(0));
+	return (char)rand() % (MAX_CHAR + 1 - MIN_CHAR) + MIN_CHAR;
+}
+
+char gen_type()
 {
 	srand(time(0));
 	return rand() % 2 ? 'A' : 'B';
+}
+
+struct individuo * gen_individuo()
+{
+	struct individuo *figlio;
+
+	figlio = malloc(sizeof(*figlio));
+	figlio->nome = malloc(sizeof(*figlio->nome));
+	
+	figlio->tipo = gen_type();
+	figlio->nome = gen_name();
+	figlio->genoma = gen_genoma();
+
+	return figlio;
 }
 
 void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value)
@@ -33,8 +64,8 @@ void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value)
 
 void run_child(char name)
 {
-    printf("run_child: %c\n", name);
-    execve(name == 'A' ? CHILD_A_PATH : CHILD_B_PATH, NULL, NULL);
+	printf("run_child: %c\n", name);
+	execve(name == 'A' ? CHILD_A_PATH : CHILD_B_PATH, NULL, NULL);
 }
 
 int main()
@@ -43,6 +74,7 @@ int main()
 	pid_t my_pid, my_ppid, value;
 	int num_of_process = INIT_PEOPLE;
 	char name = 'A';
+	struct individuo *figlio;
 
 	// check popolation limit
 	if (num_of_process > 20)
@@ -64,7 +96,7 @@ int main()
 
 		case 0:
 			/* Perform actions specific to child */
-            printf("CHILD %c is running...\n", name);
+			printf("CHILD %c is running...\n", name);
 			run_child(name);
 			exit(EXIT_SUCCESS);
 			break;
@@ -72,7 +104,7 @@ int main()
 		default:
 			/* Perform actions specific to parent */
 			run_parent(my_pid, my_ppid, value);
-			name = roll_type();
+			figlio  = gen_individuo();
 			break;
 		}
 		sleep(1);
