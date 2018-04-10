@@ -5,6 +5,15 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define die(e)                      \
+	do                              \
+	{                               \
+		fprintf(stderr, "%s\n", e); \
+		exit(EXIT_FAILURE);         \
+	} while (0);
 
 // Input arguments;
 const int INIT_PEOPLE = 5; // number of inital children
@@ -30,6 +39,7 @@ struct individuo *gen_individuo();
 
 void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value);
 void run_child(struct individuo *figlio);
+unsigned int rand_interval(unsigned int min, unsigned int max);
 
 int main()
 {
@@ -59,7 +69,7 @@ int main()
 		{
 		case -1:
 			/* Handle error */
-			fprintf(stderr, "Error #%03d: %s\n", errno, strerror(errno));
+			die(strerror(errno));
 			break;
 
 		case 0:
@@ -75,22 +85,20 @@ int main()
 		}
 		sleep(1);
 	}
-	sleep(10);
+
+	wait(NULL);
+
 	exit(EXIT_SUCCESS);
 }
 
 unsigned long gen_genoma()
 {
-	sleep(0.001);
-	srand(time(0));
-	return (unsigned long)rand() % (GENES + 1 - 2) + 2;
+	return (unsigned long) rand_interval(2, GENES);
 }
 
 char gen_name()
 {
-	sleep(0.001);
-	srand(time(0));
-	return (char)rand() % (MAX_CHAR + 1 - MIN_CHAR) + MIN_CHAR;
+	return (char) rand_interval(MIN_CHAR, MAX_CHAR);
 }
 
 char gen_type()
@@ -122,6 +130,34 @@ void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value)
 
 void run_child(struct individuo *figlio)
 {
-	printf("Hi, I'm the child with the name %c\n", figlio->nome);
-	execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", NULL, NULL);
+	printf("\nHi, I'm the child with the name %c\n", figlio->nome);
+	printf("My type is:  %c\n", figlio->tipo);
+	printf("My genoma is:  %ul\n", figlio->genoma);
+	
+	int error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", NULL, NULL);
+	if (error == -1)
+	{
+		die(strcat("Errore execve child ",  figlio->nome));
+	}
+}
+
+/****** UTILS ******/
+unsigned int rand_interval(unsigned int min, unsigned int max)
+{
+	// reference https://stackoverflow.com/a/17554531
+    int r;
+    const unsigned int range = 1 + max - min;
+    const unsigned int buckets = RAND_MAX / range;
+    const unsigned int limit = buckets * range;
+
+	srand(time(0));
+    /* Create equal size buckets all in a row, then fire randomly towards
+     * the buckets until you land in one of them. All buckets are equally
+     * likely. If you land off the end of the line of buckets, try again. */
+    do
+    {
+        r = rand();
+    } while (r >= limit);
+
+    return min + (r / buckets);
 }
