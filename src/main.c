@@ -93,12 +93,12 @@ int main()
 
 unsigned long gen_genoma()
 {
-	return (unsigned long) rand_interval(2, GENES);
+	return (unsigned long)rand_interval(2, GENES);
 }
 
 char gen_name()
 {
-	return (char) rand_interval(MIN_CHAR, MAX_CHAR);
+	return (char)rand_interval(MIN_CHAR, MAX_CHAR);
 }
 
 char gen_type()
@@ -133,11 +133,11 @@ void run_child(struct individuo *figlio)
 	printf("\nHi, I'm the child with the name %c\n", figlio->nome);
 	printf("My type is:  %c\n", figlio->tipo);
 	printf("My genoma is:  %ul\n", figlio->genoma);
-	
+
 	int error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", NULL, NULL);
 	if (error == -1)
 	{
-		die(strcat("Errore execve child ",  figlio->nome));
+		die(strcat("Errore execve child ", figlio->nome));
 	}
 }
 
@@ -145,19 +145,19 @@ void run_child(struct individuo *figlio)
 unsigned int rand_interval(unsigned int min, unsigned int max)
 {
 	// reference https://stackoverflow.com/a/17554531
-    int r;
-    const unsigned int range = 1 + max - min;
-    const unsigned int buckets = RAND_MAX / range;
-    const unsigned int limit = buckets * range;
+	int r;
+	const unsigned int range = 1 + max - min;
+	const unsigned int buckets = RAND_MAX / range;
+	const unsigned int limit = buckets * range;
 
 	srand(time(0));
-    /* Create equal size buckets all in a row, then fire randomly towards
+	/* Create equal size buckets all in a row, then fire randomly towards
      * the buckets until you land in one of them. All buckets are equally
      * likely. If you land off the end of the line of buckets, try again. */
-    do
-    {
-        r = rand();
-    } while (r >= limit);
+	do
+	{
+		r = rand();
+	} while (r >= limit);
 
-    return min + (r / buckets);
+	return min + (r / buckets);
 }
