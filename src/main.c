@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 #define die(e)                      \
 	do                              \
@@ -37,57 +38,72 @@ char gen_name();
 char gen_type();
 struct individuo *gen_individuo();
 
-void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value);
+void run_parent(pid_t gestore_pid, pid_t pg_pid);
 void run_child(struct individuo *figlio);
 unsigned int rand_interval(unsigned int min, unsigned int max);
+static void wake_up_process(int signo);
 
 int main()
 {
 	int i;
-	pid_t my_pid, my_ppid, value;
-	int num_of_process = INIT_PEOPLE;
-	char name;
+	pid_t gestore_pid, pg_pid, child_pid;
 	struct individuo *figlio;
+	int population = INIT_PEOPLE;
+	pid_t pid_array[population];
 
 	// check popolation limit
-	if (num_of_process > 20)
+	if (population > 20)
 	{
 		printf("Warning: Popolazione iniziale maggiore di 20, il massimo consentito.");
 		exit(EXIT_FAILURE);
 	}
 
+	// pid gestore, pid padre gestore
+	gestore_pid = getpid();
+	pg_pid = getppid();
+
+	run_parent(gestore_pid, pg_pid);
+
+	//generate population
 	for (i = 0; i < INIT_PEOPLE; i++)
 	{
-		printf("Name: %c | ", name);
-		printf("LOOP: %d\n", i + 1);
+		printf("\nchild number: %d", i + 1);
 
-		// anagrafica child
+		// generate child
 		figlio = gen_individuo();
+		child_pid = fork();
 
-		// creazione child
-		switch (value = fork())
-		{
-		case -1:
-			/* Handle error */
+		/* Handle error create child*/
+		if(child_pid < 0){
 			die(strerror(errno));
-			break;
+		}
 
-		case 0:
-			/* Perform actions specific to child */
+		/* Perform actions specific to child */
+		if(child_pid == 0){
+            signal(SIGUSR1, wake_up_process);
+			printf("** CHILD %d, my parent is %d\n", getpid(), getppid());
+			pause();
 			run_child(figlio);
 			exit(EXIT_SUCCESS);
-			break;
-
-		default:
-			/* Perform actions specific to parent */
-			run_parent(my_pid, my_ppid, value);
-			break;
 		}
-		sleep(1);
+		
+		/* Perform actions specific to parent */
+        pid_array[i] = child_pid;
 	}
 
-	wait(NULL);
+	// make sure child set the signal handler
+	sleep(1);
 
+	// send signal to wake up all the children
+	for (int i = 0; i < population; i++){
+		printf("sending the signal SIGUSR1 to the child %d...\n", pid_array[i]);
+        kill(pid_array[i], SIGUSR1);
+	}
+
+    for (int i = 0; i < population; i++){
+        wait(NULL); 
+	}
+		
 	exit(EXIT_SUCCESS);
 }
 
@@ -120,12 +136,9 @@ struct individuo *gen_individuo()
 	return figlio;
 }
 
-void run_parent(pid_t my_pid, pid_t my_ppid, pid_t value)
+void run_parent(pid_t gestore_pid, pid_t pg_pid)
 {
-	my_pid = getpid();
-	my_ppid = getppid();
-	printf("* PARENT: PID=%d, PPID=%d, fork_value=%d\n",
-		   my_pid, my_ppid, value);
+	printf("* PARENT: PID=%d, PPID=%d\n", gestore_pid, pg_pid);
 }
 
 void run_child(struct individuo *figlio)
@@ -142,6 +155,13 @@ void run_child(struct individuo *figlio)
 }
 
 /****** UTILS ******/
+static void wake_up_process(int signo) {
+	printf("wake_up_process signo: %d\n", signo);
+	if(signo == SIGUSR1){
+		printf("process %d as received SIGUSR1\n", getpid());
+	}
+}
+
 unsigned int rand_interval(unsigned int min, unsigned int max)
 {
 	// reference https://stackoverflow.com/a/17554531
