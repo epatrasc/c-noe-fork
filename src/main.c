@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #define die(e)                      \
 	do                              \
@@ -15,7 +17,18 @@
 		fprintf(stderr, "%s\n", e); \
 		exit(EXIT_FAILURE);         \
 	} while (0);
-
+#define TEST_ERROR                                 \
+	if (errno)                                     \
+	{                                              \
+		dprintf(STDERR_FILENO,                     \
+				"%s:%d: PID=%5d: Error %d (%s)\n", \
+				__FILE__,                          \
+				__LINE__,                          \
+				getpid(),                          \
+				errno,                             \
+				strerror(errno));                  \
+	}
+#define NUM_PROC 5
 // Input arguments;
 const int INIT_PEOPLE = 5; // number of inital children
 const unsigned long GENES = 1000000;
@@ -33,6 +46,12 @@ struct individuo
 	unsigned long genoma;
 };
 
+struct shared_data
+{
+	unsigned long cur_idx;
+	struct individuo individui[NUM_PROC];
+};
+
 unsigned long gen_genoma();
 char gen_name();
 char gen_type();
@@ -43,11 +62,15 @@ void run_child(struct individuo *figlio);
 unsigned int rand_interval(unsigned int min, unsigned int max);
 static void wake_up_process(int signo);
 
+// Global variables
+int m_id, s_id, num_errors;
+
 int main()
 {
-	int i;
+	int i, cur_i;
 	pid_t gestore_pid, pg_pid, child_pid;
 	struct individuo *figlio;
+	struct shared_data *my_data;
 	int population = INIT_PEOPLE;
 	pid_t pid_array[population];
 
@@ -61,8 +84,14 @@ int main()
 	// pid gestore, pid padre gestore
 	gestore_pid = getpid();
 	pg_pid = getppid();
+	my_data->cur_idx = 0;
 
 	run_parent(gestore_pid, pg_pid);
+
+	// ** SHARED MEMORY
+	// Create a shared memory area and attach it to the pointer
+	m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0600);
+	my_data = shmat(m_id, NULL, 0);
 
 	//generate population
 	for (i = 0; i < INIT_PEOPLE; i++)
@@ -74,36 +103,53 @@ int main()
 		child_pid = fork();
 
 		/* Handle error create child*/
-		if(child_pid < 0){
+		if (child_pid < 0)
+		{
 			die(strerror(errno));
 		}
 
 		/* Perform actions specific to child */
-		if(child_pid == 0){
-            signal(SIGUSR1, wake_up_process);
+		if (child_pid == 0)
+		{
+			signal(SIGUSR1, wake_up_process);
 			printf("** CHILD %d, my parent is %d\n", getpid(), getppid());
 			pause();
 			run_child(figlio);
 			exit(EXIT_SUCCESS);
 		}
-		
+
 		/* Perform actions specific to parent */
-        pid_array[i] = child_pid;
+		pid_array[i] = child_pid;
+
+		// add children in memory
+		cur_i = my_data->cur_idx;
+		my_data->individui[cur_i] = *figlio;
+		my_data->cur_idx++;
 	}
 
 	// make sure child set the signal handler
 	sleep(1);
 
 	// send signal to wake up all the children
-	for (int i = 0; i < population; i++){
+	for (int i = 0; i < population; i++)
+	{
 		printf("sending the signal SIGUSR1 to the child %d...\n", pid_array[i]);
-        kill(pid_array[i], SIGUSR1);
+		kill(pid_array[i], SIGUSR1);
 	}
 
-    for (int i = 0; i < population; i++){
-        wait(NULL); 
+	// Printed all data, then the shared memory can be marked for
+	// deletion. Remember: it will be deleted only when all processes
+	// are detached from it
+	while (shmctl(m_id, IPC_RMID, NULL))
+	{
+		TEST_ERROR;
 	}
-		
+
+	for (int i = 0; i < population; i++)
+	{
+		wait(NULL);
+	}
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -155,9 +201,11 @@ void run_child(struct individuo *figlio)
 }
 
 /****** UTILS ******/
-static void wake_up_process(int signo) {
+static void wake_up_process(int signo)
+{
 	printf("wake_up_process signo: %d\n", signo);
-	if(signo == SIGUSR1){
+	if (signo == SIGUSR1)
+	{
 		printf("process %d as received SIGUSR1\n", getpid());
 	}
 }
