@@ -1,9 +1,12 @@
-#include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
-#include<time.h>
+#include <stdio.h>
 
 int main()
 {
-    srand(time(0));
-    printf("random: %d", rand() % 2);
+    char* argv[] = {"test", NULL};
+    char* envp[] = {"env=1","env2=2", NULL};
+
+    fprintf(stdout, "Salve, Sono il processo test!\n");
+    execve("./exec/child_a.exe", argv, envp);
 }

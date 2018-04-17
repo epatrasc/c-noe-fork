@@ -68,6 +68,8 @@ static void wake_up_process(int signo);
 
 static void shm_print_stats(int fd, int m_id);
 
+unsigned int compile_child_code(char type);
+
 // Global variables
 int m_id, s_id, num_errors;
 
@@ -102,7 +104,7 @@ int main() {
 
     //generate population
     for (i = 0; i < INIT_PEOPLE; i++) {
-        printf("\nchild number: %d", i + 1);
+        printf("child number: %d \n", i + 1);
 
         // generate child
         fflush(stdout);
@@ -136,7 +138,7 @@ int main() {
     }
 
     // make sure child set the signal handler
-    sleep(4);
+//    sleep(1);
 
     // send signal to wake up all the children
     for (int i = 0; i < population; i++) {
@@ -145,8 +147,9 @@ int main() {
     }
     sleep(1);
 
-    while ((wait(&status)) > 0);
-    printf("end wait(&status) ...\n");
+    while ((wait(&status)) > 0){
+        printf("end wait(&status): %d \n", status);
+    }
 
     //the shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
@@ -197,31 +200,35 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
 void run_child(int shid, struct individuo *figlio) {
     char* argv[] = {"test", NULL};
     char* envp[] = {"env=1","env2=2", NULL};
+    int error = 0, status =0;
     struct shared_data *my_data;
-    int error = 0;
 	char* buffer = malloc(sizeof(shid));
 
     my_data = shmat(shid, NULL, 0);
 
-    fflush(stdout);
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio->nome, figlio->tipo, figlio->genoma);
 
-    // print shared memory
-    for (int i = 0; i < my_data->cur_idx; i++) {
-        printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
-    }
+//    // print shared memory
+//    for (int i = 0; i < my_data->cur_idx; i++) {
+//        printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
+//    }
 
 	// run execve
 //	sprintf(buffer, "%d", shid);
 //	argv[0] = buffer;
-    printf("argv[0]: %s\n", argv[0]);
+//    printf("argv[0]: %s\n", argv[0]);
 
-	error = execv(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
+    status = compile_child_code(figlio->tipo);
+
+    error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv, envp);
 
 	// if here i'm in error
     if (error == -1) {
-        die(strcat("Errore execve child ", figlio->nome));
+        fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));
+        die("Errore execve child");
     }
+
+    exit(EXIT_FAILURE);
 }
 
 /****** UTILS ******/
@@ -246,6 +253,16 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     } while (r >= limit);
 
     return min + (r / buckets);
+}
+
+unsigned int compile_child_code(char type){
+    int status =0;
+    system("ls -a");
+    status = system(type == 'A' ? "gcc ./src/child_a.c -o ./exec/child_a.exe" : "gcc src/child_b.c -o ./exec/child_b.exe");
+    printf("COMPILE TYPE FILE: %c | terminated with exit status %d\n",
+           type, status);
+
+    return status;
 }
 
 static void shm_print_stats(int fd, int m_id) {

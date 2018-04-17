@@ -3,4 +3,7 @@ project(c_noe_fork C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(c_noe_fork src/main.c)
+MESSAGE( STATUS "Starting build process")
+
+
+add_executable(main.exe src/main.c)
