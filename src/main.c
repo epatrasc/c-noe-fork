@@ -78,7 +78,6 @@ int main() {
     struct shared_data *my_data;
     int population = INIT_PEOPLE;
     pid_t pid_array[population];
-
     // randomize
     srand(time(NULL));
 
@@ -120,7 +119,6 @@ int main() {
             signal(SIGUSR1, wake_up_process);
             pause();
             run_child(m_id, figlio);
-            exit(EXIT_SUCCESS);
         }
 
         /* Perform actions specific to parent */
@@ -130,14 +128,15 @@ int main() {
         cur_i = my_data->cur_idx;
         my_data->individui[cur_i] = *figlio;
         my_data->cur_idx++;
-
-        printf("\nRANDOM FOR: %d", rand());
-
     }
 
     shm_print_stats(2, m_id);
+    for (int i = 0; i < my_data->cur_idx; i++) {
+        printf("Shared Memory parent pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
+    }
+
     // make sure child set the signal handler
-    sleep(1);
+    sleep(4);
 
     // send signal to wake up all the children
     for (int i = 0; i < population; i++) {
@@ -147,7 +146,7 @@ int main() {
     sleep(1);
 
     while ((wait(&status)) > 0);
-    printf("end wait(&status) ...");
+    printf("end wait(&status) ...\n");
 
     //the shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
@@ -170,8 +169,6 @@ char *gen_name() {
     name = calloc(sizeof(char), 2);
     ran_c  = (char)rand_interval(MIN_CHAR, MAX_CHAR);
     *name = ran_c;
-    printf("gen_name ran_c: %c\n", ran_c);
-    printf("gen_name name: %s\n", name);
 
     return name;
 }
@@ -198,8 +195,8 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
 }
 
 void run_child(int shid, struct individuo *figlio) {
-    char *argv[] = {NULL, NULL};
-    char *envp[] = {NULL};
+    char* argv[] = {"test", NULL};
+    char* envp[] = {"env=1","env2=2", NULL};
     struct shared_data *my_data;
     int error = 0;
 	char* buffer = malloc(sizeof(shid));
@@ -207,23 +204,21 @@ void run_child(int shid, struct individuo *figlio) {
     my_data = shmat(shid, NULL, 0);
 
     fflush(stdout);
-    printf("Hi, I'm the child with the name %s \n", figlio->nome);
-    printf("My type is:  %c\n", figlio->tipo);
-    printf("My genoma is:  %lu \n", figlio->genoma);
+    printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio->nome, figlio->tipo, figlio->genoma);
 
     // print shared memory
-    printf("Shared Memory\n");
-    printf("last index: %lu \n", my_data->cur_idx);
     for (int i = 0; i < my_data->cur_idx; i++) {
-        printf("[%d] nome: %s \n", i, my_data->individui[i].nome);
+        printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
     }
 
 	// run execve
-	sprintf(buffer, "%d", shid);
-	argv[0] = buffer;
-	dprintf(2, "argv[0]: %s\n", argv[0]);
-	dprintf(2, "argv[1]: %s\n", argv[1]);
-    error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv, envp);
+//	sprintf(buffer, "%d", shid);
+//	argv[0] = buffer;
+    printf("argv[0]: %s\n", argv[0]);
+
+	error = execv(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
+
+	// if here i'm in error
     if (error == -1) {
         die(strcat("Errore execve child ", figlio->nome));
     }
@@ -231,9 +226,8 @@ void run_child(int shid, struct individuo *figlio) {
 
 /****** UTILS ******/
 static void wake_up_process(int signo) {
-    printf("wake_up_process signo: %d\n", signo);
     if (signo == SIGUSR1) {
-        printf("process %d as received SIGUSR1\n", getpid());
+        printf("WAKEUP  process %d | received signal SIGUSR1\n", getpid());
     }
 }
 
@@ -251,7 +245,6 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
         r = lrand48();
     } while (r >= limit);
 
-    printf("\n\n #random : %d\n ",  min + (r / buckets));
     return min + (r / buckets);
 }
 
@@ -271,7 +264,7 @@ static void shm_print_stats(int fd, int m_id) {
             my_m_data.shm_dtime);
     dprintf(fd, "---------------------- Time of last change: %ld\n",
             my_m_data.shm_ctime);
-    dprintf(fd, "---------- Number of attached processes: %hu \n",
+    dprintf(fd, "---------- Number of attached processes: %lu \n",
             my_m_data.shm_nattch);
     dprintf(fd, "----------------------- PID of creator: %d\n",
             my_m_data.shm_cpid);

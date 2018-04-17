@@ -7,7 +7,7 @@ extern char **environ;  /* declared extern, defined by the OS somewhere */
 int main(int argc, char * argv[]) {
 	unsigned int i;
 	char * my_val;
-	fflush(stdout);
+
 	dprintf(2, "Salve, Sono il child A!\n");
 
 	// Print all environment variables
