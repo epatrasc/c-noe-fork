@@ -198,9 +198,11 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
 }
 
 void run_child(int shid, struct individuo *figlio) {
-    char *arg[] = {"1", NULL};
+    char *argv[] = {NULL, NULL};
+    char *envp[] = {NULL};
     struct shared_data *my_data;
     int error = 0;
+	char* buffer = malloc(sizeof(shid));
 
     my_data = shmat(shid, NULL, 0);
 
@@ -216,7 +218,12 @@ void run_child(int shid, struct individuo *figlio) {
         printf("[%d] nome: %s \n", i, my_data->individui[i].nome);
     }
 
-    error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", arg, arg);
+	// run execve
+	sprintf(buffer, "%d", shid);
+	argv[0] = buffer;
+	dprintf(2, "argv[0]: %s\n", argv[0]);
+	dprintf(2, "argv[1]: %s\n", argv[1]);
+    error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv, envp);
     if (error == -1) {
         die(strcat("Errore execve child ", figlio->nome));
     }
@@ -264,7 +271,7 @@ static void shm_print_stats(int fd, int m_id) {
             my_m_data.shm_dtime);
     dprintf(fd, "---------------------- Time of last change: %ld\n",
             my_m_data.shm_ctime);
-    dprintf(fd, "---------- Number of attached processes: %ld\n",
+    dprintf(fd, "---------- Number of attached processes: %hu \n",
             my_m_data.shm_nattch);
     dprintf(fd, "----------------------- PID of creator: %d\n",
             my_m_data.shm_cpid);
