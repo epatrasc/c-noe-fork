@@ -89,6 +89,9 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    compile_child_code('A');
+    compile_child_code('B');
+
     // pid gestore, pid padre gestore
     gestore_pid = getpid();
     pg_pid = getppid();
@@ -138,25 +141,22 @@ int main() {
     }
 
     // make sure child set the signal handler
-//    sleep(1);
+    sleep(1);
 
     // send signal to wake up all the children
     for (int i = 0; i < population; i++) {
-        printf("sending the signal SIGUSR1 to the child %d...\n", pid_array[i]);
+        printf("Sending SIGUSR1 to the child %d...\n", pid_array[i]);
         kill(pid_array[i], SIGUSR1);
     }
-    sleep(1);
 
-    while ((wait(&status)) > 0){
-        printf("end wait(&status): %d \n", status);
+    while ((child_pid = wait(&status)) > 0){
+        printf("Ended child : %d | status: %d \n", child_pid, status);
     }
 
-    //the shared memory can be marked for deletion.
+    // The shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
     // are detached from it
-    while (shmctl(m_id, IPC_RMID, NULL)) {
-        TEST_ERROR;
-    }
+    while (shmctl(m_id, IPC_RMID, NULL)) TEST_ERROR;
 
     exit(EXIT_SUCCESS);
 }
@@ -178,7 +178,7 @@ char *gen_name() {
 
 char gen_type() {
     srand(time(0));
-    return rand() % 2 ? 'A' : 'B';
+    return rand() % 2 ? 'A' : 'A';
 }
 
 struct individuo *gen_individuo() {
@@ -198,37 +198,25 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
 }
 
 void run_child(int shid, struct individuo *figlio) {
-    char* argv[] = {"test", NULL};
-    char* envp[] = {"env=1","env2=2", NULL};
-    int error = 0, status =0;
-    struct shared_data *my_data;
+    char* argv[] = {NULL, NULL};
+    char* envp[] = {NULL};
+    int error = 0;
 	char* buffer = malloc(sizeof(shid));
-
-    my_data = shmat(shid, NULL, 0);
 
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio->nome, figlio->tipo, figlio->genoma);
 
-//    // print shared memory
-//    for (int i = 0; i < my_data->cur_idx; i++) {
-//        printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
-//    }
 
 	// run execve
-//	sprintf(buffer, "%d", shid);
-//	argv[0] = buffer;
-//    printf("argv[0]: %s\n", argv[0]);
+	sprintf(buffer, "%d", shid);
+	argv[0] = buffer;
 
-    status = compile_child_code(figlio->tipo);
-
-    error = execve(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv, envp);
+    error = execv(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
 
 	// if here i'm in error
     if (error == -1) {
         fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));
         die("Errore execve child");
     }
-
-    exit(EXIT_FAILURE);
 }
 
 /****** UTILS ******/
@@ -257,8 +245,8 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 
 unsigned int compile_child_code(char type){
     int status =0;
-    system("ls -a");
-    status = system(type == 'A' ? "gcc ./src/child_a.c -o ./exec/child_a.exe" : "gcc src/child_b.c -o ./exec/child_b.exe");
+
+    status = system(type == 'A' ? "gcc ./src/child_a.c -o ./exec/child_a.exe" : "gcc ./src/child_b.c -o ./exec/child_b.exe");
     printf("COMPILE TYPE FILE: %c | terminated with exit status %d\n",
            type, status);
 

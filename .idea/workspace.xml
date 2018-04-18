@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="c_noe_fork" targetName="c_noe_fork" />
+      <config projectName="c_noe_fork" targetName="main.exe" />
     </generated>
   </component>
   <component name="CMakeSettings" AUTO_RELOAD="true">
@@ -12,8 +12,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c6b126c-ee14-4ae8-812e-4d91f964b32c" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/child_a.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_a.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/child_b.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_b.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -27,20 +27,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="750">
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" selection-start-line="4" selection-end-line="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="218" column="89" selection-start-line="218" selection-start-column="89" selection-end-line="218" selection-end-column="89" />
+            <state relative-caret-position="361">
+              <caret line="211" column="17" lean-forward="true" selection-start-line="211" selection-start-column="17" selection-end-line="211" selection-end-column="17" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -51,8 +42,8 @@
       <file leaf-file-name="child_a.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/child_a.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+            <state relative-caret-position="315">
+              <caret line="21" selection-start-line="21" selection-start-column="2" selection-end-line="23" selection-end-column="5" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -63,7 +54,8 @@
       <file leaf-file-name="child_b.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/child_b.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
+            <state relative-caret-position="315">
+              <caret line="21" column="5" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="5" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -81,7 +73,11 @@
       <find>t:</find>
       <find>end wait</find>
       <find>random</find>
+      <find>dprintf(2,</find>
     </findStrings>
+    <replaceStrings>
+      <replace>printf(</replace>
+    </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -92,8 +88,9 @@
         <option value="$PROJECT_DIR$/main.c" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/test-ipc-shm.c" />
-        <option value="$PROJECT_DIR$/src/child_a.c" />
+        <option value="$PROJECT_DIR$/src/child_b.c" />
         <option value="$PROJECT_DIR$/src/main.c" />
+        <option value="$PROJECT_DIR$/src/child_a.c" />
       </list>
     </option>
   </component>
@@ -110,15 +107,14 @@
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="65" />
     <option name="y" value="-4" />
-    <option name="width" value="1855" />
-    <option name="height" value="905" />
+    <option name="width" value="895" />
+    <option name="height" value="439" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -135,6 +131,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -155,12 +152,12 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.c_noe_fork">
+  <component name="RunManager" selected="Application.main.exe">
     <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all" />
-    <configuration name="c_noe_fork" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="c_noe_fork" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="c_noe_fork" />
+    <configuration name="main.exe" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="main.exe" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="main.exe" />
     <list>
       <item itemvalue="Application.Build All" />
-      <item itemvalue="Application.c_noe_fork" />
+      <item itemvalue="Application.main.exe" />
     </list>
   </component>
   <component name="TaskManager">
@@ -176,11 +173,12 @@
       <workItem from="1523383133948" duration="3891000" />
       <workItem from="1523737703289" duration="2398000" />
       <workItem from="1523903656343" duration="16024000" />
+      <workItem from="1524007897134" duration="4475000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="27831000" />
+    <option name="totallyTimeSpent" value="32306000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
@@ -188,22 +186,22 @@
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24905661" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.44150943" weight="0.32786885" />
       <window_info anchor="bottom" id="CMake" order="7" weight="0.32901555" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.45714286" visible="true" weight="0.32786885" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.45714286" weight="0.32786885" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.54285717" side_tool="true" visible="true" weight="0.32786885" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="7" sideWeight="0.54285717" side_tool="true" visible="true" weight="0.32786885" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.48948786" weight="0.31454918" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.44150943" weight="0.32786885" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -227,12 +225,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>100</line>
+          <line>103</line>
           <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/child_a.c</url>
-          <line>18</line>
+          <line>26</line>
           <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
@@ -242,22 +240,22 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>214</line>
+          <line>210</line>
           <option name="timeStamp" value="49" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>157</line>
+          <line>160</line>
           <option name="timeStamp" value="51" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>147</line>
+          <line>150</line>
           <option name="timeStamp" value="52" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>205</line>
+          <line>206</line>
           <option name="timeStamp" value="53" />
         </line-breakpoint>
       </breakpoints>
@@ -301,16 +299,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c">
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="975">
-          <caret line="65" column="4" selection-start-line="65" selection-start-column="4" selection-end-line="65" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="60">
+          <caret line="4" selection-start-line="4" selection-end-line="4" />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c" />
     <entry file="file://$PROJECT_DIR$/src/main.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1410">
@@ -335,16 +331,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
-          <caret line="60" column="17" selection-start-line="60" selection-start-column="11" selection-end-line="60" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c" />
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="200">
@@ -405,16 +392,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="138" column="39" lean-forward="true" selection-start-line="138" selection-start-column="39" selection-end-line="138" selection-end-column="39" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c" />
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="200">
@@ -463,21 +441,12 @@
     <entry file="file://$PROJECT_DIR$/main.c" />
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
+        <state relative-caret-position="135">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="975">
-          <caret line="65" column="4" selection-start-line="65" selection-start-column="4" selection-end-line="65" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test-ipc-shm.c" />
     <entry file="file:///usr/include/x86_64-linux-gnu/sys/wait.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="169">
@@ -487,7 +456,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/child_b.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
+        <state relative-caret-position="315">
+          <caret line="21" column="5" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="5" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
@@ -496,8 +466,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/child_a.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+        <state relative-caret-position="315">
+          <caret line="21" selection-start-line="21" selection-start-column="2" selection-end-line="23" selection-end-column="5" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
@@ -506,8 +476,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="218" column="89" selection-start-line="218" selection-start-column="89" selection-end-line="218" selection-end-column="89" />
+        <state relative-caret-position="361">
+          <caret line="211" column="17" lean-forward="true" selection-start-line="211" selection-start-column="17" selection-end-line="211" selection-end-column="17" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>

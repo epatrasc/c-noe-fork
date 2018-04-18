@@ -1,30 +1,53 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
+#include <string.h>
 
-extern char **environ;  /* declared extern, defined by the OS somewhere */
+extern char **environ;
+#define NUM_PROC 5
+#define TEST_ERROR                                     \
+		if (errno)                                     \
+		{                                              \
+			printf("%s:%d: PID=%5d: Error %d (%s)\n",  \
+					__FILE__,                          \
+					__LINE__,                          \
+					getpid(),                          \
+					errno,                             \
+					strerror(errno));                  \
+		}
+
+struct individuo {
+    char tipo;
+    char *nome;
+    unsigned long genoma;
+};
+
+struct shared_data {
+	unsigned long cur_idx;
+	struct individuo individui[NUM_PROC];
+};
 
 int main(int argc, char * argv[]) {
-	unsigned int i;
+	unsigned int i, shid;
 	char * my_val;
-    fprintf(stdout, "Salve, Sono il child A!\n");
-	printf("Salve, Sono il child A!\n");
+	struct shared_data *my_data;
 
-	// Print all environment variables
-	for(i=0; environ[i]; i++) {
-		printf("env_var[%d] = \"%s\"\n", i, environ[i]);
+	printf("CHILD A | pid: %d\n", getpid());
+	if (argc == 1) {
+		shid =  atoi(argv[0]);
+		printf("argv[0]: %d \n",shid);
 	}
-	
-	// Print the value of a variable specified by argv[1], if any
-	if (argc > 1) {
-		if ((my_val = getenv(argv[1]))) {
-			printf("Env. var. \"%s\" is \"%s\"\n", argv[1], my_val);
-		} else {
-			printf("No environment variable %s\n", argv[1]);
-		}
-		return 0;
+	my_data = malloc(sizeof(*my_data));
+	my_data = shmat(shid, NULL, 0);
+	TEST_ERROR;
+
+	for (int i = 0; i < my_data->cur_idx; i++) {
+		printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
+		TEST_ERROR;
 	}
 
-	printf("No arguments passed!");
 	exit(EXIT_SUCCESS);
 }
