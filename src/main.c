@@ -102,7 +102,7 @@ int main() {
 
     // ** SHARED MEMORY
     // Create a shared memory area and attach it to the pointer
-    m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0600);
+    m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0666);
     my_data = shmat(m_id, NULL, 0);
 
     //generate population

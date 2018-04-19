@@ -32,21 +32,24 @@ struct shared_data {
 
 int main(int argc, char * argv[]) {
 	unsigned int i, shid;
-	char * my_val;
+	char * my_val, nome;
 	struct shared_data *my_data;
 
-	printf("CHILD A | pid: %d\n", getpid());
+	printf("\n ---> CHILD A | pid: %d <---\n", getpid());
 	if (argc == 1) {
 		shid =  atoi(argv[0]);
 		printf("argv[0]: %d \n",shid);
 	}
-	my_data = malloc(sizeof(*my_data));
-	my_data = shmat(shid, NULL, 0);
-	TEST_ERROR;
+
+	if ((my_data = shmat(shid, NULL, 0)) == (void *)-1) {
+		perror("cannot attach shared memory to address\n");
+		exit(1);
+    }else{
+		printf("attach shared memory: ok\n");
+	}
 
 	for (int i = 0; i < my_data->cur_idx; i++) {
-		printf("Shared Memory pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
-		TEST_ERROR;
+		printf("shm pid: %d | [%d] genoma: %lu \n", getpid(), i, my_data->individui[i].genoma);
 	}
 
 	exit(EXIT_SUCCESS);
