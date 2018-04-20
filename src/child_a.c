@@ -49,7 +49,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	for (int i = 0; i < my_data->cur_idx; i++) {
-		printf("shm pid: %d | [%d] genoma: %lu \n", getpid(), i, my_data->individui[i].genoma);
+		printf("shm pid: %d | [%d] nome: %c \n", getpid(), i, my_data->individui[i].nome[0]);
 	}
 
 	exit(EXIT_SUCCESS);

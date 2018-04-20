@@ -28,11 +28,11 @@
                 errno,                             \
                 strerror(errno));                  \
     }
-#define NUM_PROC 5
+
 // Input arguments;
 const int INIT_PEOPLE = 5; // number of inital children
 const unsigned long GENES = 1000000;
-const unsigned int BIRTH_DEATH = 1;   //seconds
+const unsigned int BIRTH_DEATH = 5;   //seconds
 const unsigned int SIM_TIME = 1 * 60; //seconds
 
 const int MAX_POPOLATION = 20;
@@ -47,20 +47,20 @@ struct individuo {
 
 struct shared_data {
     unsigned long cur_idx;
-    struct individuo individui[NUM_PROC];
+    struct individuo* individui;
 };
 
 unsigned long gen_genoma();
 
-char *gen_name();
+char *gen_name(char* name);
 
 char gen_type();
 
-struct individuo *gen_individuo();
+struct individuo gen_individuo();
 
 void run_parent(pid_t gestore_pid, pid_t pg_pid);
 
-void run_child(int shid, struct individuo *figlio);
+void run_child(int shid, struct individuo figlio);
 
 unsigned int rand_interval(unsigned int min, unsigned int max);
 
@@ -75,42 +75,28 @@ int m_id, s_id, num_errors;
 
 int main() {
     int i, cur_i, status;
-    pid_t gestore_pid, pg_pid, child_pid;
-    struct individuo *figlio;
-    struct shared_data *my_data;
-    int population = INIT_PEOPLE;
-    pid_t pid_array[population];
+    struct individuo* figli[INIT_PEOPLE];
+    struct individuo figlio;
+    struct shared_data* my_data;
+    pid_t gestore_pid, pg_pid, child_pid, pid_array[INIT_PEOPLE];
+
     // randomize
     srand(time(NULL));
-
-    // check popolation limit
-    if (population > 20) {
-        printf("Warning: Popolazione iniziale maggiore di 20, il massimo consentito.");
-        exit(EXIT_FAILURE);
-    }
-
-    compile_child_code('A');
-    compile_child_code('B');
 
     // pid gestore, pid padre gestore
     gestore_pid = getpid();
     pg_pid = getppid();
-    my_data = malloc(sizeof(*my_data));
-    my_data->cur_idx = 0;
-
     run_parent(gestore_pid, pg_pid);
 
-    // ** SHARED MEMORY
-    // Create a shared memory area and attach it to the pointer
-    m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0666);
-    my_data = shmat(m_id, NULL, 0);
+    // compile child code
+    compile_child_code('A');
+    compile_child_code('B');
 
     //generate population
     for (i = 0; i < INIT_PEOPLE; i++) {
-        printf("child number: %d \n", i + 1);
+        printf("child sequence: %d \n", i + 1);
 
         // generate child
-        fflush(stdout);
         figlio = gen_individuo();
         child_pid = fork();
 
@@ -128,23 +114,33 @@ int main() {
 
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
-
-        // add children in memory
-        cur_i = my_data->cur_idx;
-        my_data->individui[cur_i] = *figlio;
-        my_data->cur_idx++;
     }
 
+    // ** SHARED MEMORY
+    // Create a shared memory area and attach it to the pointer
+    //init shared data
+//    my_data = malloc(sizeof(*my_data));
+//    my_data->individui = malloc(sizeof(*figlio));
+//    my_data->cur_idx = 0;
+
+    // add children in memory
+//    cur_i = my_data->cur_idx;
+//    my_data->individui[cur_i] = *figlio;
+//    my_data->cur_idx++;
+
+    m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0666);
+    my_data = shmat(m_id, NULL, 0);
     shm_print_stats(2, m_id);
+
     for (int i = 0; i < my_data->cur_idx; i++) {
-        printf("Shared Memory parent pid %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
+        printf("SHM pid gestore: %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
     }
 
     // make sure child set the signal handler
     sleep(1);
 
     // send signal to wake up all the children
-    for (int i = 0; i < population; i++) {
+    for (int i = 0; i < INIT_PEOPLE; i++) {
         printf("Sending SIGUSR1 to the child %d...\n", pid_array[i]);
         kill(pid_array[i], SIGUSR1);
     }
@@ -165,15 +161,18 @@ unsigned long gen_genoma() {
     return (unsigned long) rand_interval(2, GENES);
 }
 
-char *gen_name() {
-    char *name;
-    char ran_c;
+char* gen_name(char* name) {
+    int new_length = (int) (strlen(name) + 2);
+    char* new_name = (char*) calloc(sizeof(char), new_length);
+    char* buffer = calloc(sizeof(char),2);
 
-    name = calloc(sizeof(char), 2);
-    ran_c  = (char)rand_interval(MIN_CHAR, MAX_CHAR);
-    *name = ran_c;
+    memset(new_name, '\0', new_length);
 
-    return name;
+    sprintf(buffer, "%c",(char)rand_interval(MIN_CHAR, MAX_CHAR));
+    strcat(new_name, name);
+    strcat(new_name, buffer);
+
+    return new_name;
 }
 
 char gen_type() {
@@ -181,14 +180,12 @@ char gen_type() {
     return rand() % 2 ? 'A' : 'A';
 }
 
-struct individuo *gen_individuo() {
-    struct individuo *figlio;
+struct individuo gen_individuo() {
+    struct individuo figlio;
 
-    figlio = malloc(sizeof(*figlio));
-
-    figlio->tipo = gen_type();
-    figlio->nome = gen_name();
-    figlio->genoma = gen_genoma();
+    figlio.tipo = gen_type();
+    figlio.nome = gen_name("");
+    figlio.genoma = gen_genoma();
 
     return figlio;
 }
@@ -197,20 +194,20 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
     printf("* PARENT: PID=%d, PPID=%d\n", gestore_pid, pg_pid);
 }
 
-void run_child(int shid, struct individuo *figlio) {
-    char* argv[] = {NULL, NULL};
-    char* envp[] = {NULL};
+void run_child(int shid, struct individuo figlio) {
     int error = 0;
+    char* envp[] = {NULL};
+    char* argv[] = {NULL, NULL};
 	char* buffer = malloc(sizeof(shid));
 
-    printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio->nome, figlio->tipo, figlio->genoma);
+    printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
 
 	// run execve
 	sprintf(buffer, "%d", shid);
 	argv[0] = buffer;
 
-    error = execv(figlio->tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
+    error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
 
 	// if here i'm in error
     if (error == -1) {
