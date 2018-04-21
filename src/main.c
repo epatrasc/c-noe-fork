@@ -66,18 +66,19 @@ unsigned int rand_interval(unsigned int min, unsigned int max);
 
 static void wake_up_process(int signo);
 
-static void shm_print_stats(int fd, int m_id);
+static void shm_print_stats(int m_id);
 
 unsigned int compile_child_code(char type);
+
+void publish_shared_data(struct individuo figli[], int num_elem);
 
 // Global variables
 int m_id, s_id, num_errors;
 
 int main() {
     int i, cur_i, status;
-    struct individuo* figli[INIT_PEOPLE];
+    struct individuo figli[INIT_PEOPLE];
     struct individuo figlio;
-    struct shared_data* my_data;
     pid_t gestore_pid, pg_pid, child_pid, pid_array[INIT_PEOPLE];
 
     // randomize
@@ -114,27 +115,10 @@ int main() {
 
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
+        figli[i] = figlio;
     }
 
-    // ** SHARED MEMORY
-    // Create a shared memory area and attach it to the pointer
-    //init shared data
-//    my_data = malloc(sizeof(*my_data));
-//    my_data->individui = malloc(sizeof(*figlio));
-//    my_data->cur_idx = 0;
-
-    // add children in memory
-//    cur_i = my_data->cur_idx;
-//    my_data->individui[cur_i] = *figlio;
-//    my_data->cur_idx++;
-
-    m_id = shmget(IPC_PRIVATE, sizeof(*my_data), 0666);
-    my_data = shmat(m_id, NULL, 0);
-    shm_print_stats(2, m_id);
-
-    for (int i = 0; i < my_data->cur_idx; i++) {
-        printf("SHM pid gestore: %d | [%d] nome: %s \n", getpid(), i, my_data->individui[i].nome);
-    }
+    publish_shared_data(figli, INIT_PEOPLE);
 
     // make sure child set the signal handler
     sleep(1);
@@ -152,7 +136,7 @@ int main() {
     // The shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
     // are detached from it
-    while (shmctl(m_id, IPC_RMID, NULL)) TEST_ERROR;
+    // while (shmctl(m_id, IPC_RMID, NULL)) TEST_ERROR;
 
     exit(EXIT_SUCCESS);
 }
@@ -216,6 +200,34 @@ void run_child(int shid, struct individuo figlio) {
     }
 }
 
+// ** SHARED MEMORY
+void publish_shared_data(struct individuo figli[], int num_elem){
+    int cur_i;
+    struct shared_data* my_data;
+    struct individuo* individui;
+
+    // Create a shared memory area and attach it to the pointer
+    //init shared data
+    my_data = malloc(sizeof(my_data));
+    m_id = shmget(IPC_PRIVATE, sizeof(my_data), 0666);
+    my_data = shmat(m_id, NULL, 0);
+    
+    my_data->individui = malloc(sizeof(individui));
+    my_data->cur_idx = 0;
+
+    // add children type A to shared memory
+    cur_i = my_data->cur_idx;
+    for(int i=0; i < num_elem; i++){
+        if(figli[i].tipo == 'A'){
+            my_data->individui[cur_i] = figli[i];
+            my_data->cur_idx++;
+        }
+    }
+
+    
+    shm_print_stats(m_id);
+}
+
 /****** UTILS ******/
 static void wake_up_process(int signo) {
     if (signo == SIGUSR1) {
@@ -250,28 +262,28 @@ unsigned int compile_child_code(char type){
     return status;
 }
 
-static void shm_print_stats(int fd, int m_id) {
+static void shm_print_stats(int m_id) {
     struct shmid_ds my_m_data;
 
     while (shmctl(m_id, IPC_STAT, &my_m_data)) {
         TEST_ERROR;
     }
 
-    dprintf(fd, "\n--- IPC Shared Memory ID: %8d, \nSTART ---\n", m_id);
-    dprintf(fd, "---------------------- Memory size: %ld\n",
+    printf("\n--- IPC Shared Memory ID: %8d, START ---\n", m_id);
+    printf("---------------------- Memory size: %ld\n",
             my_m_data.shm_segsz);
-    dprintf(fd, "---------------------- Time of last attach: %ld\n",
+    printf("---------------------- Time of last attach: %ld\n",
             my_m_data.shm_atime);
-    dprintf(fd, "---------------------- Time of last detach: %ld\n",
+    printf("---------------------- Time of last detach: %ld\n",
             my_m_data.shm_dtime);
-    dprintf(fd, "---------------------- Time of last change: %ld\n",
+    printf("---------------------- Time of last change: %ld\n",
             my_m_data.shm_ctime);
-    dprintf(fd, "---------- Number of attached processes: %lu \n",
+    printf("---------- Number of attached processes: %lu \n",
             my_m_data.shm_nattch);
-    dprintf(fd, "----------------------- PID of creator: %d\n",
+    printf("----------------------- PID of creator: %d\n",
             my_m_data.shm_cpid);
-    dprintf(fd, "----------------------- PID of last shmat shmdt : %d\n",
+    printf("----------------------- PID of last shmat shmdt : %d\n",
             my_m_data.shm_lpid);
-    dprintf(fd, "--- IPC Shared Memory ID: %8d \n", m_id);
-    dprintf(fd, " END -----\n");
+    printf("--- IPC Shared Memory ID: %8d \n", m_id);
+    printf("----- END -----\n");
 }
