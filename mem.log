@@ -1,0 +1,71 @@
+==7129== Memcheck, a memory error detector
+==7129== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==7129== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==7129== Command: ./exec/main.exe
+==7129== Parent PID: 22615
+==7129== 
+==7129== Invalid write of size 8
+==7129==    at 0x4016DB: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==  Address 0x5205138 is 0 bytes after a block of size 24 alloc'd
+==7129==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==7129==    by 0x4015FF: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129== 
+==7129== Invalid write of size 8
+==7129==    at 0x4016E2: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==  Address 0x5205140 is 8 bytes after a block of size 24 alloc'd
+==7129==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==7129==    by 0x4015FF: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129== 
+==7129== Invalid write of size 8
+==7129==    at 0x4016EA: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==  Address 0x5205148 is 16 bytes after a block of size 24 alloc'd
+==7129==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==7129==    by 0x4015FF: publish_shared_data (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401207: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129== 
+
+valgrind: m_mallocfree.c:303 (get_bszB_as_is): Assertion 'bszB_lo == bszB_hi' failed.
+valgrind: Heap block lo/hi size mismatch: lo = 176684, hi = 0.
+This is probably caused by your program erroneously writing past the
+end of a heap block and corrupting heap metadata.  If you fix any
+invalid writes reported by Memcheck, this assertion failure will
+probably go away.  Please try that before reporting this as a bug.
+
+
+host stacktrace:
+==7129==    at 0x38083F48: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x38084064: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x380841F1: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x38091F72: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x38050E84: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x380511D2: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x380D4CF3: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+==7129==    by 0x380E3946: ??? (in /usr/lib/valgrind/memcheck-amd64-linux)
+
+sched status:
+  running_tid=1
+
+Thread 1: status = VgTs_Runnable (lwpid 7129)
+==7129==    at 0x4C2FB55: calloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==7129==    by 0x40133B: gen_name (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x4013FC: gen_individuo (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+==7129==    by 0x401135: main (in /home/radaw/workspace/c-noe-fork/exec/main.exe)
+
+
+Note: see also the FAQ in the source distribution.
+It contains workarounds to several common problems.
+In particular, if Valgrind aborted or crashed after
+identifying problems in your program, there's a good chance
+that fixing those problems will prevent Valgrind aborting or
+crashing, especially if it happened in m_mallocfree.c.
+
+If that doesn't help, please report this bug to: www.valgrind.org
+
+In the bug report, send all the above text, the valgrind
+version, and what OS and version you are using.  Thanks.
+

@@ -40,7 +40,7 @@ int main() {
     // randomize
     srand(time(NULL));
 
-    for(int i=0; i<100000; i++){
+    for(int i=0; i<100; i++){
         pid_t pid = fork();
 
         if(pid==0)

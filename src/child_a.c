@@ -8,48 +8,88 @@
 
 extern char **environ;
 #define NUM_PROC 5
-#define TEST_ERROR                                     \
-		if (errno)                                     \
-		{                                              \
-			printf("%s:%d: PID=%5d: Error %d (%s)\n",  \
-					__FILE__,                          \
-					__LINE__,                          \
-					getpid(),                          \
-					errno,                             \
-					strerror(errno));                  \
-		}
+#define TEST_ERROR                                \
+	if (errno)                                    \
+	{                                             \
+		printf("%s:%d: PID=%5d: Error %d (%s)\n", \
+			   __FILE__,                          \
+			   __LINE__,                          \
+			   getpid(),                          \
+			   errno,                             \
+			   strerror(errno));                  \
+	}
 
-struct individuo {
-    char tipo;
-    char *nome;
-    unsigned long genoma;
+int SHMFLG = 0666;
+
+struct individuo
+{
+	char tipo;
+	char *nome;
+	unsigned long genoma;
 };
 
-struct shared_data {
+struct shared_data
+{
 	unsigned long cur_idx;
-	struct individuo individui[NUM_PROC];
+	struct individuo *individui;
 };
 
-int main(int argc, char * argv[]) {
-	unsigned int i, shid;
-	char * my_val, nome;
-	struct shared_data *my_data;
+key_t key = 1065;
+
+int main(int argc, char *argv[])
+{
+	unsigned int i, shmid;
+	char *my_val, nome;
+	struct shared_data *shdata;
 
 	printf("\n ---> CHILD A | pid: %d <---\n", getpid());
-	if (argc == 1) {
-		shid =  atoi(argv[0]);
-		printf("argv[0]: %d \n",shid);
+	if (argc == 1)
+	{
+		shmid = atoi(argv[0]);
+		printf("argv[0]: %d \n", shmid);
 	}
 
-	if ((my_data = shmat(shid, NULL, 0)) == (void *)-1) {
-		perror("cannot attach shared memory to address\n");
-		exit(1);
-    }else{
-		printf("attach shared memory: ok\n");
+	if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) < 0)
+	{
+		perror("cannot get shared memory id | shdata\n");
+		exit(EXIT_FAILURE);
 	}
 
-	for (int i = 0; i < my_data->cur_idx; i++) {
-		printf("shm pid: %d | [%d] nome: %c \n", getpid(), i, my_data->individui[i].nome[0]);
+	if ((shdata = shmat(shmid, NULL, 0)) < 0)
+	{
+		perror("cannot attach shared memory to address \n");
+		exit(EXIT_FAILURE);
+	}
+
+    if ((shmid = shmget(key+ 1, shdata->cur_idx * sizeof(shdata->individui),SHMFLG)) < 0)
+    {
+        perror("cannot get shared memory id | shdata->individui \n");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((shdata->individui = shmat(shmid, NULL, 0)) < 0)
+    {
+        perror("cannot attach shared memory to address shdata->individui \n");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((shmid = shmget(key+ 2, sizeof(*shdata->individui[shdata->cur_idx].nome),SHMFLG)) < 0)
+    {
+        perror("cannot get shared memory id | shdata->individui->nome\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((shdata->individui[shdata->cur_idx].nome = shmat(shmid, NULL, 0)) < 0)
+    {
+        perror("cannot attach shared memory to address shdata->individui->nom \n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    for (int i = 0; i < shdata->cur_idx; i++)
+	{
+		struct individuo figlio = shdata->individui[i];
+		printf("pid: %d | [%d] genoma: %lu \n", getpid(), i, figlio.genoma);
 	}
 
 	exit(EXIT_SUCCESS);

@@ -11,11 +11,10 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-#define die(e)                      \
-    do                              \
-    {                               \
-        fprintf(stderr, "%s\n", e); \
-        exit(EXIT_FAILURE);         \
+#define die(msg_error)      \
+    do                      \
+    {                       \
+        fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));\
     } while (0);
 #define TEST_ERROR                                 \
     if (errno)                                     \
@@ -38,21 +37,24 @@ const unsigned int SIM_TIME = 1 * 60; //seconds
 const int MAX_POPOLATION = 20;
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
+const int SHMFLG = IPC_CREAT | 0666;
 
-struct individuo {
+struct individuo
+{
     char tipo;
     char *nome;
     unsigned long genoma;
 };
 
-struct shared_data {
+struct shared_data
+{
     unsigned long cur_idx;
-    struct individuo* individui;
+    struct individuo *individui;
 };
 
 unsigned long gen_genoma();
 
-char *gen_name(char* name);
+char *gen_name(char *name);
 
 char gen_type();
 
@@ -60,22 +62,27 @@ struct individuo gen_individuo();
 
 void run_parent(pid_t gestore_pid, pid_t pg_pid);
 
-void run_child(int shid, struct individuo figlio);
+void run_child(struct individuo figlio);
 
 unsigned int rand_interval(unsigned int min, unsigned int max);
 
+int len_of(int x);
+
 static void wake_up_process(int signo);
 
-static void shm_print_stats(int m_id);
+static void shm_print_stats(int shmid);
 
 unsigned int compile_child_code(char type);
 
-void publish_shared_data(struct individuo figli[], int num_elem);
+void publish_shared_data(struct individuo figlio);
 
 // Global variables
-int m_id, s_id, num_errors;
+int shmid, s_id, num_errors;
+struct shared_data *shdata;
+key_t key = 1065;
 
-int main() {
+int main()
+{
     int i, cur_i, status;
     struct individuo figli[INIT_PEOPLE];
     struct individuo figlio;
@@ -87,14 +94,27 @@ int main() {
     // pid gestore, pid padre gestore
     gestore_pid = getpid();
     pg_pid = getppid();
-    run_parent(gestore_pid, pg_pid);
+    run_parent(getpid(), pg_pid);
 
     // compile child code
     compile_child_code('A');
     compile_child_code('B');
 
+    //Create shm segment
+    if ((shmid = shmget(key, sizeof(*shdata), SHMFLG)) < 0)
+    {
+        die("parent shmget");
+    }
+
+    //Attach segment to data space
+    if ((shdata = shmat(shmid, NULL, 0)) == (void *)-1)
+    {
+        die("parent shmat");
+    }
+
     //generate population
-    for (i = 0; i < INIT_PEOPLE; i++) {
+    for (i = 0; i < INIT_PEOPLE; i++)
+    {
         printf("child sequence: %d \n", i + 1);
 
         // generate child
@@ -102,69 +122,83 @@ int main() {
         child_pid = fork();
 
         /* Handle error create child*/
-        if (child_pid < 0) {
+        if (child_pid < 0)
+        {
             die(strerror(errno));
         }
 
         /* Perform actions specific to child */
-        if (child_pid == 0) {
+        if (child_pid == 0)
+        {
             signal(SIGUSR1, wake_up_process);
             pause();
-            run_child(m_id, figlio);
+            run_child(figlio);
+            exit(EXIT_FAILURE);
         }
 
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
         figli[i] = figlio;
+        publish_shared_data(figlio);
     }
 
-    publish_shared_data(figli, INIT_PEOPLE);
+    shm_print_stats(shmid);
+    for (int i = 0; i < shdata->cur_idx; i++)
+    {
+        struct individuo figlio = shdata->individui[i];
+        printf("GESTORE pid: %d | [%d] nome: %s \n", getpid(), i, figlio.nome);
+    }
 
     // make sure child set the signal handler
     sleep(1);
-
+    //exit(EXIT_FAILURE);
     // send signal to wake up all the children
-    for (int i = 0; i < INIT_PEOPLE; i++) {
+    for (int i = 0; i < INIT_PEOPLE; i++)
+    {
         printf("Sending SIGUSR1 to the child %d...\n", pid_array[i]);
         kill(pid_array[i], SIGUSR1);
     }
 
-    while ((child_pid = wait(&status)) > 0){
+    while ((child_pid = wait(&status)) > 0)
+    {
         printf("Ended child : %d | status: %d \n", child_pid, status);
     }
 
     // The shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
     // are detached from it
-    // while (shmctl(m_id, IPC_RMID, NULL)) TEST_ERROR;
-
+    // while (shmctl(shmid, IPC_RMID, NULL)) TEST_ERROR;
     exit(EXIT_SUCCESS);
 }
 
-unsigned long gen_genoma() {
-    return (unsigned long) rand_interval(2, GENES);
+unsigned long gen_genoma()
+{
+    return (unsigned long)rand_interval(2, GENES);
 }
 
-char* gen_name(char* name) {
-    int new_length = (int) (strlen(name) + 2);
-    char* new_name = (char*) calloc(sizeof(char), new_length);
-    char* buffer = calloc(sizeof(char),2);
+char *gen_name(char *name)
+{
+    int new_length = (int)(strlen(name) + 2);
+    char *new_name = calloc(sizeof(char), new_length);
+    char *buffer = calloc(sizeof(char), 2);
 
-    memset(new_name, '\0', new_length);
-
-    sprintf(buffer, "%c",(char)rand_interval(MIN_CHAR, MAX_CHAR));
-    strcat(new_name, name);
+    sprintf(buffer, "%c", (char)rand_interval(MIN_CHAR, MAX_CHAR));
+    strcpy(new_name, name);
     strcat(new_name, buffer);
+
+    free(buffer);
 
     return new_name;
 }
 
-char gen_type() {
+char gen_type()
+{
     srand(time(0));
     return rand() % 2 ? 'A' : 'A';
 }
 
-struct individuo gen_individuo() {
+struct individuo gen_individuo()
+{
     struct individuo figlio;
 
     figlio.tipo = gen_type();
@@ -174,68 +208,76 @@ struct individuo gen_individuo() {
     return figlio;
 }
 
-void run_parent(pid_t gestore_pid, pid_t pg_pid) {
+void run_parent(pid_t gestore_pid, pid_t pg_pid)
+{
     printf("* PARENT: PID=%d, PPID=%d\n", gestore_pid, pg_pid);
 }
 
-void run_child(int shid, struct individuo figlio) {
+void run_child(struct individuo figlio)
+{
     int error = 0;
-    char* envp[] = {NULL};
-    char* argv[] = {NULL, NULL};
-	char* buffer = malloc(sizeof(shid));
+    char *envp[] = {NULL};
+    char *buffer = calloc(sizeof(char), len_of(shmid));
+    char *argv[] = {calloc(sizeof(char), len_of(shmid) * sizeof(char)), NULL};
 
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
-
-	// run execve
-	sprintf(buffer, "%d", shid);
-	argv[0] = buffer;
+    // run execve
+    sprintf(buffer, "%d", shmid);
+    strcat(argv[0], buffer);
+    free(buffer);
 
     error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
 
-	// if here i'm in error
-    if (error == -1) {
-        fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));
+    // if here i'm in error
+    if (error < 0)
+    {
+        free(argv[0]);
         die("Errore execve child");
     }
 }
 
 // ** SHARED MEMORY
-void publish_shared_data(struct individuo figli[], int num_elem){
-    int cur_i;
-    struct shared_data* my_data;
-    struct individuo* individui;
+void publish_shared_data(struct individuo figlio)
+{   
+    if(figlio.tipo == 'B') return;
 
-    // Create a shared memory area and attach it to the pointer
-    //init shared data
-    my_data = malloc(sizeof(my_data));
-    m_id = shmget(IPC_PRIVATE, sizeof(my_data), 0666);
-    my_data = shmat(m_id, NULL, 0);
-    
-    my_data->individui = malloc(sizeof(individui));
-    my_data->cur_idx = 0;
+    if(shdata->individui == NULL){
+        shdata->cur_idx = 0;
+        shmid = shmget(key + 1, (INIT_PEOPLE * sizeof(shdata->individui)), 0666 | IPC_CREAT);
+        shdata->individui = shmat(shmid,NULL, 0);
 
-    // add children type A to shared memory
-    cur_i = my_data->cur_idx;
-    for(int i=0; i < num_elem; i++){
-        if(figli[i].tipo == 'A'){
-            my_data->individui[cur_i] = figli[i];
-            my_data->cur_idx++;
+        if(shdata->individui == NULL){
+            die("error malloc shdata->individui");
         }
     }
 
-    
-    shm_print_stats(m_id);
+    if(shdata->individui[shdata->cur_idx].nome == NULL){
+        shmid = shmget(key + 2, ( sizeof(*figlio.nome)), 0666 | IPC_CREAT);
+        shdata->individui[shdata->cur_idx].nome = shmat(shmid,NULL, 0);
+
+        if(shdata->individui[shdata->cur_idx].nome == NULL){
+            die("error malloc shdata->individui->nome");
+        }
+    }
+
+    shdata->individui[shdata->cur_idx].tipo = figlio.tipo;
+    shdata->individui[shdata->cur_idx].genoma = figlio.genoma;
+    strcpy(shdata->individui[shdata->cur_idx].nome, figlio.nome);
+    shdata->cur_idx++;
 }
 
 /****** UTILS ******/
-static void wake_up_process(int signo) {
-    if (signo == SIGUSR1) {
+static void wake_up_process(int signo)
+{
+    if (signo == SIGUSR1)
+    {
         printf("WAKEUP  process %d | received signal SIGUSR1\n", getpid());
     }
 }
 
-unsigned int rand_interval(unsigned int min, unsigned int max) {
+unsigned int rand_interval(unsigned int min, unsigned int max)
+{
     // reference https://stackoverflow.com/a/17554531
     int r;
     const unsigned int range = 1 + max - min;
@@ -245,15 +287,17 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     /* Create equal size buckets all in a row, then fire randomly towards
      * the buckets until you land in one of them. All buckets are equally
      * likely. If you land off the end of the line of buckets, try again. */
-    do {
+    do
+    {
         r = lrand48();
     } while (r >= limit);
 
     return min + (r / buckets);
 }
 
-unsigned int compile_child_code(char type){
-    int status =0;
+unsigned int compile_child_code(char type)
+{
+    int status = 0;
 
     status = system(type == 'A' ? "gcc ./src/child_a.c -o ./exec/child_a.exe" : "gcc ./src/child_b.c -o ./exec/child_b.exe");
     printf("COMPILE TYPE FILE: %c | terminated with exit status %d\n",
@@ -262,28 +306,43 @@ unsigned int compile_child_code(char type){
     return status;
 }
 
-static void shm_print_stats(int m_id) {
+static void shm_print_stats(int shmid)
+{
     struct shmid_ds my_m_data;
 
-    while (shmctl(m_id, IPC_STAT, &my_m_data)) {
+    while (shmctl(shmid, IPC_STAT, &my_m_data))
+    {
         TEST_ERROR;
     }
 
-    printf("\n--- IPC Shared Memory ID: %8d, START ---\n", m_id);
+    printf("\n--- IPC Shared Memory ID: %8d, START ---\n", shmid);
     printf("---------------------- Memory size: %ld\n",
-            my_m_data.shm_segsz);
+           my_m_data.shm_segsz);
     printf("---------------------- Time of last attach: %ld\n",
-            my_m_data.shm_atime);
+           my_m_data.shm_atime);
     printf("---------------------- Time of last detach: %ld\n",
-            my_m_data.shm_dtime);
+           my_m_data.shm_dtime);
     printf("---------------------- Time of last change: %ld\n",
-            my_m_data.shm_ctime);
+           my_m_data.shm_ctime);
     printf("---------- Number of attached processes: %lu \n",
-            my_m_data.shm_nattch);
+           my_m_data.shm_nattch);
     printf("----------------------- PID of creator: %d\n",
-            my_m_data.shm_cpid);
+           my_m_data.shm_cpid);
     printf("----------------------- PID of last shmat shmdt : %d\n",
-            my_m_data.shm_lpid);
-    printf("--- IPC Shared Memory ID: %8d \n", m_id);
+           my_m_data.shm_lpid);
+    printf("--- IPC Shared Memory ID: %8d \n", shmid);
     printf("----- END -----\n");
+}
+
+int len_of(int value)
+{
+    int l = 1;
+
+    while (value > 9)
+    {
+        l++;
+        value /= 10;
+    }
+
+    return l;
 }
