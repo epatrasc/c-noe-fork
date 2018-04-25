@@ -21,26 +21,25 @@ int main ()
   const int shm_size = 1024;
 
   int shm_id;
-  struct individuo figlio;
-  struct individuo* shmaddr, *ptr;
-
-  int *p;
+    struct individuo figlio;
+    struct individuo *figli;
+    struct shared_data* shmaddr, *ptr;
 
   /* Allocate a shared memory segment. */
-  shm_id = shmget (shm_key, shm_size, IPC_CREAT | S_IRUSR | S_IWUSR);
+  shm_id = shmget (shm_key, shm_size, S_IRUSR | S_IWUSR);
 
   /* Attach the shared memory segment. */
-  shmaddr = (char*) shmat (shm_id, 0, 0);
+  shmaddr = shmat (shm_id, 0, 0);
 
   printf ("shared memory attached at address %p\n", shmaddr);
 
   /* Start to read data. */
-    p = (int *)shmaddr;
-    ptr += sizeof (figlio.nome);
-    ptr = shmaddr + sizeof (figlio);
-    printf ("1=%c\n", ptr->tipo);
-    printf ("2=%lu\n", ptr->genoma);
-    printf ("0=%s\n", ptr->nome);
+    ptr = shmaddr ;
+    figli = ptr->individui;
+    figlio = figli[0];
+    printf ("1=%c\n", figlio.tipo);
+    printf ("2=%lu\n", figlio.genoma);
+    printf ("0=%s\n", figlio.nome);
 
 //  shared_memory[0] = ptr;
 //  ptr += *p++;
