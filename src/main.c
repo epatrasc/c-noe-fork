@@ -79,7 +79,7 @@ void publish_shared_data(struct individuo figlio);
 // Global variables
 int shmid, s_id, num_errors;
 struct shared_data *shdata;
-key_t key = 1065;
+key_t key = 1060;
 
 int main()
 {
@@ -151,6 +151,9 @@ int main()
 
     // make sure child set the signal handler
     sleep(1);
+    if(1 == 1){
+        exit(EXIT_FAILURE);
+    }
     //exit(EXIT_FAILURE);
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++)
@@ -253,7 +256,7 @@ void publish_shared_data(struct individuo figlio)
     }
 
     if(shdata->individui[shdata->cur_idx].nome == NULL){
-        shmid = shmget(key + 2, ( sizeof(*figlio.nome)), 0666 | IPC_CREAT);
+        shmid = shmget(key + 2, sizeof(figlio.nome) / sizeof(figlio.nome[0]), 0666 | IPC_CREAT);
         shdata->individui[shdata->cur_idx].nome = shmat(shmid,NULL, 0);
 
         if(shdata->individui[shdata->cur_idx].nome == NULL){
@@ -263,7 +266,8 @@ void publish_shared_data(struct individuo figlio)
 
     shdata->individui[shdata->cur_idx].tipo = figlio.tipo;
     shdata->individui[shdata->cur_idx].genoma = figlio.genoma;
-    strcpy(shdata->individui[shdata->cur_idx].nome, figlio.nome);
+    strncpy(shdata->individui[shdata->cur_idx].nome,figlio.nome, sizeof(figlio.nome) / sizeof(figlio.nome[0]));
+
     shdata->cur_idx++;
 }
 

@@ -34,7 +34,7 @@ struct shared_data
 	struct individuo *individui;
 };
 
-key_t key = 1065;
+key_t key = 1060;
 
 int main(int argc, char *argv[])
 {
@@ -73,13 +73,13 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if ((shmid = shmget(key+ 2, sizeof(*shdata->individui[shdata->cur_idx].nome),SHMFLG)) < 0)
+    if ((shmid = shmget(key+ 2, sizeof(char *),SHMFLG)) < 0)
     {
         perror("cannot get shared memory id | shdata->individui->nome\n");
         exit(EXIT_FAILURE);
     }
 
-    if ((shdata->individui[shdata->cur_idx].nome = shmat(shmid, NULL, 0)) < 0)
+    if ((shdata->individui[0].nome = shmat(shmid, NULL, 0)) < 0)
     {
         perror("cannot attach shared memory to address shdata->individui->nom \n");
         exit(EXIT_FAILURE);
