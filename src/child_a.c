@@ -41,7 +41,7 @@ struct child_a
 struct shared_data
 {
 	unsigned long cur_idx;
-	struct child_a children_a[100];
+	struct child_a *children_a;
 };
 
 key_t key = 1060;
@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 	// 	printf("argv[0]: %d \n", shmid);
 	// }
 
+    // shdata
 	if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) == 0)
 	{
 		perror("cannot get shared memory id | shdata\n");
@@ -71,33 +72,26 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-    // if ((shmid = shmget(key+ 1, shdata->cur_idx * sizeof(shdata->individui),SHMFLG)) < 0)
-    // {
-    //     perror("cannot get shared memory id | shdata->individui \n");
-    //     exit(EXIT_FAILURE);
-    // }
+	// shdata->children_a
+     if ((shmid = shmget(++key, getpagesize(),SHMFLG)) == 0)
+     {
+         perror("cannot get shared memory id | shdata->children_a \n");
+         exit(EXIT_FAILURE);
+     }
 
-    // if ((shdata->individui = shmat(shmid, NULL, 0)) < 0)
-    // {
-    //     perror("cannot attach shared memory to address shdata->individui \n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // if ((shmid = shmget(key+ 2, sizeof(char *),SHMFLG)) < 0)
-    // {
-    //     perror("cannot get shared memory id | shdata->individui->nome\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // if ((shdata->individui[0].nome = shmat(shmid, NULL, 0)) < 0)
-    // {
-    //     perror("cannot attach shared memory to address shdata->individui->nom \n");
-    //     exit(EXIT_FAILURE);
-    // }
-
+     if ((shdata->children_a = shmat(shmid, NULL, 0)) < 0)
+     {
+         perror("cannot attach shared memory to address shdata->children_a \n");
+         exit(EXIT_FAILURE);
+     }
 
     for (int i = 0; i < shdata->cur_idx; i++)
 	{
+        if(shdata->children_a[i].alive == 0){
+            printf("shdata->children_a[%d] it's NULL \n", i);
+            continue;
+        }
+
 		struct child_a child = shdata->children_a[i];
 		printf("current pid: %d | [%d] genoma: %lu | child_a pid: %d \n", getpid(), i, child.genoma, child.pid);
 

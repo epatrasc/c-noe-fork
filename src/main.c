@@ -59,7 +59,13 @@ struct child_a
 struct shared_data
 {
     unsigned long cur_idx;
-    struct child_a children_a[100];
+    struct child_a *children_a;
+};
+
+struct stats{
+    int num_type_a;
+    int num_type_b;
+    int cnt_total_pop;
 };
 
 unsigned long gen_genoma();
@@ -112,7 +118,7 @@ int main()
     compile_child_code('B');
 
     //Create shm segment
-    if ((shmid = shmget(key, psize, SHMFLG)) < 0)
+    if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) < 0)
     {
         die("parent shmget");
     }
@@ -123,6 +129,17 @@ int main()
         die("parent shmat");
     }
     shdata->cur_idx = 0;
+
+    if ((shmid = shmget(++key, getpagesize(), SHMFLG)) < 0)
+    {
+        die("parent shmget");
+    }
+
+    //Attach segment to data space
+    if ((shdata->children_a = shmat(shmid, NULL, 0)) == (void *)-1)
+    {
+        die("parent shmat");
+    }
 
     //generate population
     for (i = 0; i < INIT_PEOPLE; i++)
@@ -160,6 +177,8 @@ int main()
         struct child_a child = shdata->children_a[i];
         printf("GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
+
+    memset(&shdata->children_a[0],0, sizeof(struct child_a));
 
     // make sure child set the signal handler
     sleep(1);
