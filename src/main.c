@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <stdbool.h>
 
 #define die(msg_error)      \
     do                      \
@@ -44,18 +45,21 @@ struct individuo
     char tipo;
     char *nome;
     unsigned long genoma;
+    pid_t pid;
+    bool alive;
 };
 
 struct child_a
 {
     unsigned long genoma;
     pid_t pid;
+    bool alive;
 };
 
 struct shared_data
 {
     unsigned long cur_idx;
-    struct child_a *children_a;
+    struct child_a children_a[100];
 };
 
 unsigned long gen_genoma();
@@ -118,6 +122,7 @@ int main()
     {
         die("parent shmat");
     }
+    shdata->cur_idx = 0;
 
     //generate population
     for (i = 0; i < INIT_PEOPLE; i++)
@@ -127,7 +132,6 @@ int main()
         // generate child
         figlio = gen_individuo();
         child_pid = fork();
-
         /* Handle error create child*/
         if (child_pid < 0)
         {
@@ -145,6 +149,7 @@ int main()
 
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
+        figlio.pid = child_pid;
         figli[i] = figlio;
         publish_shared_data(figlio);
     }
@@ -152,15 +157,15 @@ int main()
     shm_print_stats(shmid);
     for (int i = 0; i < shdata->cur_idx; i++)
     {
-        struct individuo figlio = shdata->individui[i];
-        printf("GESTORE pid: %d | [%d] nome: %s \n", getpid(), i, figlio.nome);
+        struct child_a child = shdata->children_a[i];
+        printf("GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
 
     // make sure child set the signal handler
     sleep(1);
-    if(1 == 1){
-        exit(EXIT_FAILURE);
-    }
+//    if(1 == 1){
+//        exit(EXIT_FAILURE);
+//    }
     //exit(EXIT_FAILURE);
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++)
@@ -177,6 +182,7 @@ int main()
     // The shared memory can be marked for deletion.
     // Remember: it will be deleted only when all processes
     // are detached from it
+    // shmdt(shdata);
     // while (shmctl(shmid, IPC_RMID, NULL)) TEST_ERROR;
     exit(EXIT_SUCCESS);
 }
@@ -214,6 +220,7 @@ struct individuo gen_individuo()
     figlio.tipo = gen_type();
     figlio.nome = gen_name("");
     figlio.genoma = gen_genoma();
+    figlio.alive = true;
 
     return figlio;
 }
@@ -252,25 +259,12 @@ void publish_shared_data(struct individuo figlio)
 {   
     if(figlio.tipo == 'B') return;
 
-    if(shdata->individui == NULL){
-        shdata->cur_idx = 0;
-        shmid = shmget(++key, (INIT_PEOPLE * sizeof(shdata->individui)), 0666 | IPC_CREAT);
-        shdata->individui = shmat(shmid,NULL, 0);
+    struct child_a child;
+    child.pid = figlio.pid;
+    child.genoma = figlio.genoma;
+    child.alive = figlio.alive;
 
-        if(shdata->individui == NULL){
-            die("error malloc shdata->individui");
-        }
-    }
-
-    char *nome;
-    shdata->individui[shdata->cur_idx].tipo = figlio.tipo;
-    shdata->individui[shdata->cur_idx].genoma = figlio.genoma;
-
-    int offset = strcpy(nome, figlio.nome);
-    memcpy(shdata->individui[shdata->cur_idx].nome, &offset, sizeof(offset));
-
-
-
+    shdata->children_a[shdata->cur_idx]= child;
     shdata->cur_idx++;
 }
 
