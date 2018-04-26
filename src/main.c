@@ -46,10 +46,16 @@ struct individuo
     unsigned long genoma;
 };
 
+struct child_a
+{
+    unsigned long genoma;
+    pid_t pid;
+};
+
 struct shared_data
 {
     unsigned long cur_idx;
-    struct individuo *individui;
+    struct child_a *children_a;
 };
 
 unsigned long gen_genoma();
@@ -87,6 +93,7 @@ int main()
     struct individuo figli[INIT_PEOPLE];
     struct individuo figlio;
     pid_t gestore_pid, pg_pid, child_pid, pid_array[INIT_PEOPLE];
+    size_t psize = getpagesize();
 
     // randomize
     srand(time(NULL));
@@ -101,7 +108,7 @@ int main()
     compile_child_code('B');
 
     //Create shm segment
-    if ((shmid = shmget(key, sizeof(*shdata), SHMFLG)) < 0)
+    if ((shmid = shmget(key, psize, SHMFLG)) < 0)
     {
         die("parent shmget");
     }
@@ -247,7 +254,7 @@ void publish_shared_data(struct individuo figlio)
 
     if(shdata->individui == NULL){
         shdata->cur_idx = 0;
-        shmid = shmget(key + 1, (INIT_PEOPLE * sizeof(shdata->individui)), 0666 | IPC_CREAT);
+        shmid = shmget(++key, (INIT_PEOPLE * sizeof(shdata->individui)), 0666 | IPC_CREAT);
         shdata->individui = shmat(shmid,NULL, 0);
 
         if(shdata->individui == NULL){
@@ -255,18 +262,14 @@ void publish_shared_data(struct individuo figlio)
         }
     }
 
-    if(shdata->individui[shdata->cur_idx].nome == NULL){
-        shmid = shmget(key + 2, sizeof(figlio.nome) / sizeof(figlio.nome[0]), 0666 | IPC_CREAT);
-        shdata->individui[shdata->cur_idx].nome = shmat(shmid,NULL, 0);
-
-        if(shdata->individui[shdata->cur_idx].nome == NULL){
-            die("error malloc shdata->individui->nome");
-        }
-    }
-
+    char *nome;
     shdata->individui[shdata->cur_idx].tipo = figlio.tipo;
     shdata->individui[shdata->cur_idx].genoma = figlio.genoma;
-    strncpy(shdata->individui[shdata->cur_idx].nome,figlio.nome, sizeof(figlio.nome) / sizeof(figlio.nome[0]));
+
+    int offset = strcpy(nome, figlio.nome);
+    memcpy(shdata->individui[shdata->cur_idx].nome, &offset, sizeof(offset));
+
+
 
     shdata->cur_idx++;
 }

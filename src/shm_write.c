@@ -49,8 +49,8 @@ int main ()
     ptr = shmaddr + sizeof (figli);
     ptr->cur_idx = 1;
     ptr->individui = figli;
-    shmaddr->cur_idx = ptr->cur_idx;
-    //memcpy(shmaddr->individui, &ptr->individui, sizeof (ptr->individui));
+
+    memcpy(shmaddr, &ptr, sizeof (ptr->individui));
     printf ("writer ended.\n");
 
     /*calling the other process*/
