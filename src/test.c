@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
@@ -23,6 +24,19 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     return min + (r / buckets);
 }
 
+int len_of(unsigned long value)
+{
+    int l = 1;
+
+    while (value > 9)
+    {
+        l++;
+        value /= 10;
+    }
+
+    return l;
+}
+
 char* gen_name(char* name) {
     int new_length = (int) (strlen(name) + 2);
     char* new_name = (char*) calloc(sizeof(char), new_length);
@@ -37,34 +51,54 @@ char* gen_name(char* name) {
     return new_name;
 }
 
-
+struct individuo
+{
+    char tipo;
+    char *nome;
+    unsigned long genoma;
+    pid_t pid;
+    bool alive;
+};
 
 int main()
 {
-    int n=10;
-    char* str1="HELLO";
-    char* str2;
-    char* str4;
-    char  str3[10];
+    int error = 0;
+    struct individuo figlio;
+    char *argv[] = {NULL, NULL, NULL, NULL};
 
-    printf("RUNNING test.c \n");
-    for(int i=0; i<11; i++){
-        str3[i] = 'A';
+    figlio.nome="ABCFD";
+    figlio.tipo='A';
+    figlio.genoma=20202;
+
+    printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
+
+    // run execve
+    char *buffer;
+
+    argv[0] = calloc(strlen(figlio.nome) + 1, sizeof(char));
+    strcat(argv[0], figlio.nome);
+
+    argv[1] = calloc(2, sizeof(char));
+    buffer = calloc(2,sizeof(char));
+    sprintf(buffer,"%c", figlio.tipo);
+    strcat(argv[1], buffer);
+    free(buffer);
+
+    buffer = calloc(len_of(figlio.genoma),sizeof(char));
+    argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
+    sprintf(buffer, "%lu", figlio.genoma);
+    strcat(argv[2], buffer);
+    free(buffer);
+
+    error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
+
+    // if here i'm in error
+    if (error < 0)
+    {
+        free(argv[0]);
+        free(argv[1]);
+        free(argv[2]);
+        free(argv);
+        exit(EXIT_FAILURE);
     }
-
-//    strcat(str1, str2);
-//    str1 = (char*) calloc(sizeof(char), n+1);
-//    str4= (char*) calloc(sizeof(char), 2);
-//    memset(str1, '\0', 11);
-//    memset(str4, '\0', 2);
-//    sprintf(str4,"%c",(char)rand_interval(MIN_CHAR, MAX_CHAR));
-//    strcpy(str1, "ABCDGFG");
-//    strcat(str1, str4);
-    printf("gen name: %s \n", gen_name("b"));
-
-
-//    printf("string1: %s \n",str1);
-//    printf("string4: %s \n",str4);
-//    printf("string2: %s \n",str2);
-//    printf("string3: %s \n",str3);
 }

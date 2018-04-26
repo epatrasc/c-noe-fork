@@ -86,63 +86,33 @@ int len_of(int x);
 
 static void wake_up_process(int signo);
 
-static void shm_print_stats(int shmid);
-
 unsigned int compile_child_code(char type);
 
+void init_shmemory();
+void free_shmemory();
 void publish_shared_data(struct individuo figlio);
 
 // Global variables
-int shmid, s_id, num_errors;
+int shmid[2];
 struct shared_data *shdata;
 key_t key = 1060;
 
 int main()
 {
-    int i, cur_i, status;
     struct individuo figli[INIT_PEOPLE];
     struct individuo figlio;
-    pid_t gestore_pid, pg_pid, child_pid, pid_array[INIT_PEOPLE];
-    size_t psize = getpagesize();
+    pid_t child_pid, pid_array[INIT_PEOPLE];
 
-    // randomize
+    //init steps
     srand(time(NULL));
-
-    // pid gestore, pid padre gestore
-    gestore_pid = getpid();
-    pg_pid = getppid();
-    run_parent(getpid(), pg_pid);
-
-    // compile child code
+    init_shmemory();
     compile_child_code('A');
     compile_child_code('B');
 
-    //Create shm segment
-    if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) < 0)
-    {
-        die("parent shmget");
-    }
+    run_parent(getpid(), getppid());
 
-    //Attach segment to data space
-    if ((shdata = shmat(shmid, NULL, 0)) == (void *)-1)
-    {
-        die("parent shmat");
-    }
-    shdata->cur_idx = 0;
-
-    if ((shmid = shmget(++key, getpagesize(), SHMFLG)) < 0)
-    {
-        die("parent shmget");
-    }
-
-    //Attach segment to data space
-    if ((shdata->children_a = shmat(shmid, NULL, 0)) == (void *)-1)
-    {
-        die("parent shmat");
-    }
-
-    //generate population
-    for (i = 0; i < INIT_PEOPLE; i++)
+    //init population
+    for (int i = 0; i < INIT_PEOPLE; i++)
     {
         printf("child sequence: %d \n", i + 1);
 
@@ -171,21 +141,15 @@ int main()
         publish_shared_data(figlio);
     }
 
-    shm_print_stats(shmid);
     for (int i = 0; i < shdata->cur_idx; i++)
     {
         struct child_a child = shdata->children_a[i];
         printf("GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
 
-    memset(&shdata->children_a[0],0, sizeof(struct child_a));
-
     // make sure child set the signal handler
     sleep(1);
-//    if(1 == 1){
-//        exit(EXIT_FAILURE);
-//    }
-    //exit(EXIT_FAILURE);
+
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++)
     {
@@ -193,16 +157,14 @@ int main()
         kill(pid_array[i], SIGUSR1);
     }
 
+    int status;
     while ((child_pid = wait(&status)) > 0)
     {
         printf("Ended child : %d | status: %d \n", child_pid, status);
     }
 
-    // The shared memory can be marked for deletion.
-    // Remember: it will be deleted only when all processes
-    // are detached from it
-    // shmdt(shdata);
-    // while (shmctl(shmid, IPC_RMID, NULL)) TEST_ERROR;
+    free_shmemory();
+
     exit(EXIT_SUCCESS);
 }
 
@@ -252,15 +214,26 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid)
 void run_child(struct individuo figlio)
 {
     int error = 0;
-    char *envp[] = {NULL};
-    char *buffer = calloc(sizeof(char), len_of(shmid));
-    char *argv[] = {calloc(sizeof(char), len_of(shmid) * sizeof(char)), NULL};
+    char *argv[] = {NULL, NULL, NULL, NULL};
 
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
     // run execve
-    sprintf(buffer, "%d", shmid);
-    strcat(argv[0], buffer);
+    char *buffer;
+
+    argv[0] = calloc(strlen(figlio.nome) + 1, sizeof(char));
+    strcat(argv[0], figlio.nome);
+
+    argv[1] = calloc(2, sizeof(char));
+    buffer = calloc(2,sizeof(char));
+    sprintf(buffer,"%c", figlio.tipo);
+    strcat(argv[1], buffer);
+    free(buffer);
+
+    buffer = calloc(len_of(figlio.genoma),sizeof(char));
+    argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
+    sprintf(buffer, "%lu", figlio.genoma);
+    strcat(argv[2], buffer);
     free(buffer);
 
     error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
@@ -274,6 +247,25 @@ void run_child(struct individuo figlio)
 }
 
 // ** SHARED MEMORY
+void init_shmemory()
+{
+    if ((shmid[0] = shmget(key, sizeof(shdata), SHMFLG)) == 0) die("parent shmget");
+    if ((shdata = shmat(shmid[0], NULL, 0)) == 0) die("parent shmat shdata");
+
+    if ((shmid[1] = shmget(++key, getpagesize(), SHMFLG)) == 0)  die("parent shmget");
+    if ((shdata->children_a = shmat(shmid[1], NULL, 0)) == 0) die("parent shmat shdata->children_a");
+
+    shdata->cur_idx = 0;
+}
+
+void free_shmemory()
+{
+    shmdt(shdata->children_a);
+    shmdt(shdata);
+    while (shmctl(shmid[0], IPC_RMID, NULL)) TEST_ERROR;
+    while (shmctl(shmid[1], IPC_RMID, NULL)) TEST_ERROR;
+}
+
 void publish_shared_data(struct individuo figlio)
 {   
     if(figlio.tipo == 'B') return;
@@ -324,34 +316,6 @@ unsigned int compile_child_code(char type)
            type, status);
 
     return status;
-}
-
-static void shm_print_stats(int shmid)
-{
-    struct shmid_ds my_m_data;
-
-    while (shmctl(shmid, IPC_STAT, &my_m_data))
-    {
-        TEST_ERROR;
-    }
-
-    printf("\n--- IPC Shared Memory ID: %8d, START ---\n", shmid);
-    printf("---------------------- Memory size: %ld\n",
-           my_m_data.shm_segsz);
-    printf("---------------------- Time of last attach: %ld\n",
-           my_m_data.shm_atime);
-    printf("---------------------- Time of last detach: %ld\n",
-           my_m_data.shm_dtime);
-    printf("---------------------- Time of last change: %ld\n",
-           my_m_data.shm_ctime);
-    printf("---------- Number of attached processes: %lu \n",
-           my_m_data.shm_nattch);
-    printf("----------------------- PID of creator: %d\n",
-           my_m_data.shm_cpid);
-    printf("----------------------- PID of last shmat shmdt : %d\n",
-           my_m_data.shm_lpid);
-    printf("--- IPC Shared Memory ID: %8d \n", shmid);
-    printf("----- END -----\n");
 }
 
 int len_of(int value)

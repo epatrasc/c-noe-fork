@@ -51,15 +51,22 @@ int main(int argc, char *argv[])
 	unsigned int i, shmid;
 	char *my_val, nome;
 	struct shared_data *shdata;
+    struct individuo my_info;
 
 	printf("\n ---> CHILD A | pid: %d <---\n", getpid());
-	// if (argc == 1)
-	// {
-	// 	shmid = atoi(argv[0]);
-	// 	printf("argv[0]: %d \n", shmid);
-	// }
+	 if (argc > 1)
+	 {
+	     char *buffer;
 
-    // shdata
+        my_info.nome = argv[0];
+        my_info.tipo = argv[1][0];
+        my_info.genoma = (unsigned long) strtol(argv[2], &buffer, 10);
+
+        printf("my_info.nome: %s \n", my_info.nome);
+        printf("my_info.tipo: %c \n", my_info.tipo);
+        printf("my_info.genoma: %lu \n", my_info.genoma);
+	 }
+	 
 	if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) == 0)
 	{
 		perror("cannot get shared memory id | shdata\n");
