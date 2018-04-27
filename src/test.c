@@ -98,7 +98,6 @@ int main()
         free(argv[0]);
         free(argv[1]);
         free(argv[2]);
-        free(argv);
         exit(EXIT_FAILURE);
     }
 }
