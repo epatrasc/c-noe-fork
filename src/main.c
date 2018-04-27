@@ -111,11 +111,10 @@ int main() {
 
     //init population
     for (int i = 0; i < INIT_PEOPLE; i++) {
-        printf("child sequence: %d \n", i + 1);
-
         // generate child
         figlio = gen_individuo();
         child_pid = fork();
+
         /* Handle error create child*/
         if (child_pid < 0) {
             die(strerror(errno));
@@ -180,7 +179,7 @@ char *gen_name(char *name) {
 
 char gen_type() {
     srand(time(0));
-    return rand() % 2 ? 'A' : 'A';
+    return rand_interval(1,10) %2 == 0 ? 'A' : 'B';
 }
 
 struct individuo gen_individuo() {
@@ -210,9 +209,9 @@ void run_child(struct individuo figlio) {
     strcat(argv[0], figlio.nome);
 
     buffer = calloc(len_of(figlio.genoma), sizeof(char));
-    argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
+    argv[1] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
     sprintf(buffer, "%lu", figlio.genoma);
-    strcat(argv[2], buffer);
+    strcat(argv[1], buffer);
     free(buffer);
 
     error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
@@ -280,7 +279,7 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 }
 
 unsigned int compile_child_code(char type) {
-    char* file[] = {"gcc ./src/child_a.c -o ./exec/child_a.exe", "gcc ./src/child_b.c -o ./exec/child_b.exe"};
+    char *file[] = {"gcc ./src/child_a.c -o ./exec/child_a.exe", "gcc ./src/child_b.c -o ./exec/child_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
 
     printf("COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
