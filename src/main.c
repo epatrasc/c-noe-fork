@@ -17,6 +17,7 @@
     {                       \
         fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));\
     } while (0);
+
 #define TEST_ERROR                                 \
     if (errno)                                     \
     {                                              \
@@ -29,16 +30,8 @@
                 strerror(errno));                  \
     }
 
-// Input arguments;
-const int INIT_PEOPLE = 5; // number of inital children
-const unsigned long GENES = 1000000;
-const unsigned int BIRTH_DEATH = 5;   //seconds
-const unsigned int SIM_TIME = 1 * 60; //seconds
-
-const int MAX_POPOLATION = 20;
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
-const int SHMFLG = IPC_CREAT | 0666;
 
 struct individuo {
     char tipo;
@@ -93,10 +86,17 @@ void publish_shared_data(struct individuo figlio);
 
 // Global variables
 int shmid[2];
-struct shared_data *shdata;
 key_t key = 1060;
+struct shared_data *shdata;
+const int SHMFLG = IPC_CREAT | 0666;
 
-int main() {
+// Input arguments;
+int INIT_PEOPLE = 5; // number of inital children
+unsigned long GENES = 1000000;
+unsigned int BIRTH_DEATH = 5;   //seconds
+unsigned int SIM_TIME = 1 * 60; //seconds
+
+int main(int argc, char *argv[]) {
     struct individuo figli[INIT_PEOPLE];
     struct individuo figlio;
     pid_t child_pid, pid_array[INIT_PEOPLE];
@@ -108,6 +108,15 @@ int main() {
     compile_child_code('B');
 
     run_parent(getpid(), getppid());
+
+    for(int i = 0; i<argc;i++){
+        printf("arg[%d]: %s \n ",i,argv[i]);
+    }
+
+    if (argc >= 1) {
+        INIT_PEOPLE = atoi(argv[1]);
+        printf("INIT_PEOPLE: %d \n", INIT_PEOPLE);
+    }
 
     //init population
     for (int i = 0; i < INIT_PEOPLE; i++) {
@@ -155,7 +164,7 @@ int main() {
     }
 
     free_shmemory();
-
+    printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
 }
 
