@@ -209,18 +209,23 @@ void run_parent(pid_t gestore_pid, pid_t pg_pid) {
 void run_child(struct individuo figlio) {
     int error = 0;
     char *buffer;
-    char *argv[] = {NULL, NULL, NULL};
+    char *argv[] = {NULL, NULL, NULL, NULL};
 
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
     // run execve
-    argv[0] = calloc(strlen(figlio.nome) + 1, sizeof(char));
-    strcat(argv[0], figlio.nome);
+    // argv[0] = program name
+    argv[0] = "NOME PROGRAMMA"; //TODO
 
+    // argv[1] = child name
+    argv[1] = calloc(strlen(figlio.nome) + 1, sizeof(char));
+    strcat(argv[1], figlio.nome);
+    
+    // argv[2] = child genoma
     buffer = calloc(len_of(figlio.genoma), sizeof(char));
-    argv[1] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
+    argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
     sprintf(buffer, "%lu", figlio.genoma);
-    strcat(argv[1], buffer);
+    strcat(argv[2], buffer);
     free(buffer);
 
     error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
