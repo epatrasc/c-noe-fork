@@ -7,8 +7,8 @@ MESSAGE( STATUS "Starting build process")
 
 
 #add_executable(main.exe src/test.c)
-#add_executable(main.exe src/main.c)
-add_executable(main.exe src/child_a.c)
+add_executable(main.exe src/main.c)
+#add_executable(main.exe src/child_a.c)
 #add_executable(main.exe src/child_a_fifo.c)
 #add_executable(main.exe src/shm_write.c)
 #add_executable(main.exe src/shm_write.c)

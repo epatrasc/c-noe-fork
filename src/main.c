@@ -91,7 +91,7 @@ struct shared_data *shdata;
 const int SHMFLG = IPC_CREAT | 0666;
 
 // Input arguments;
-int INIT_PEOPLE = 5; // number of inital children
+int INIT_PEOPLE = 10; // number of inital children
 unsigned long GENES = 1000000;
 unsigned int BIRTH_DEATH = 5;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
@@ -137,6 +137,8 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
+        printf("CHILD BORN[%d]: %d\n",i, child_pid);
+
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
         figlio.pid = child_pid;
@@ -144,13 +146,15 @@ int main(int argc, char *argv[]) {
         publish_shared_data(figlio);
     }
 
+    printf("CHILD Generation END\n");
+
     for (int i = 0; i < shdata->cur_idx; i++) {
         struct child_a child = shdata->children_a[i];
         printf("GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
 
     // make sure child set the signal handler
-    sleep(1);
+    sleep(3);
 
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++) {

@@ -59,22 +59,30 @@ int main(int argc, char *argv[]) {
 
     init_shmemory();
 
+    struct child_a child;
+    int choice_id;
     for (int i = 0; i < shdata->cur_idx; i++) {
         if (shdata->children_a[i].alive == 0) {
-            printf("shdata->children_a[%d] it's NULL \n", i);
+            printf("shdata->children_a[%d] NOT alive \n", i);
             continue;
         }
 
-        struct child_a child = shdata->children_a[i];
-        printf("my_pid: %d | [%d] genoma: %lu | child_a pid: %d \n", getpid(), i, child.genoma, child.pid);
-
+        child = shdata->children_a[i];
+        printf("my_pid: %d | [%d] genoma: %lu | child_a pid: %d | alive: % \n", getpid(), i, child.genoma, child.pid, child.alive);
+        choice_id = i;
     }
 
     // TODO ho scelto A
+    if(child.alive){
+        printf("No type A found\n");
+        printf("\n ---> CHILD B END | pid: %d <---\n", getpid());
+
+        exit(EXIT_FAILURE);
+    }
 
     // Write message to A
     char *pida_s =calloc(sizeof(char), 6);
-    sprintf(pida_s, "%d", 32583);
+    sprintf(pida_s, "%d",  child.pid);
 
     int fifo_a = open(pida_s, O_WRONLY);
     char *my_msg = calloc(sizeof(char), 1024);
@@ -104,6 +112,7 @@ int main(int argc, char *argv[]) {
     free(readbuf);
     free(pid_s);
 
+    shdata->children_a[choice_id].alive= false;
     printf("\n ---> CHILD B END | pid: %d <---\n", getpid());
 
     exit(EXIT_SUCCESS);
