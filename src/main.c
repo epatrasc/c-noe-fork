@@ -11,6 +11,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <sys/msg.h>
 
 #define die(msg_error)      \
     do                      \
@@ -109,8 +111,8 @@ int main(int argc, char *argv[]) {
 
     run_parent(getpid(), getppid());
 
-    for(int i = 0; i<argc;i++){
-        printf("arg[%d]: %s \n ",i,argv[i]);
+    for (int i = 0; i < argc; i++) {
+        printf("arg[%d]: %s \n ", i, argv[i]);
     }
 
     if (argc >= 1) {
@@ -137,7 +139,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        printf("CHILD BORN[%d]: %d\n",i, child_pid);
+        printf("CHILD BORN[%d]: %d\n", i, child_pid);
 
         /* Perform actions specific to parent */
         pid_array[i] = child_pid;
@@ -165,6 +167,30 @@ int main(int argc, char *argv[]) {
     int status;
     while ((child_pid = wait(&status)) > 0) {
         printf("Ended child : %d | status: %d \n", child_pid, status);
+
+        int key, mask, msgid, rcv[2], pid_a, pid_b;
+
+        key = getpid();
+        mask = 0666;
+        msgid = msgget(key, mask);
+        if (msgid == -1) {
+            sleep(2000);//200ms
+            msgid = msgget(key, mask);
+        }
+
+        if (msgrcv(msgid, &rcv, sizeof(int), 0, IPC_NOWAIT) == -1) {
+            if (errno != ENOMSG) {
+                fprintf(stderr, "Message could not be received.\n");
+                exit(EXIT_FAILURE);
+            }
+            usleep(10000);
+            if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
+                fprintf(stderr, "Message could not be received.\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        printf("QUEUE MSG PID_A:%d, ", rcv[0]);
+        printf("QUEUE MSG PID_B:%d, ", rcv[1]);
     }
 
     free_shmemory();
@@ -192,7 +218,7 @@ char *gen_name(char *name) {
 
 char gen_type() {
     srand(time(0));
-    return rand_interval(1,10) %2 == 0 ? 'A' : 'B';
+    return rand_interval(1, 10) % 2 == 0 ? 'A' : 'B';
 }
 
 struct individuo gen_individuo() {
@@ -224,7 +250,7 @@ void run_child(struct individuo figlio) {
     // argv[1] = child name
     argv[1] = calloc(strlen(figlio.nome) + 1, sizeof(char));
     strcat(argv[1], figlio.nome);
-    
+
     // argv[2] = child genoma
     buffer = calloc(len_of(figlio.genoma), sizeof(char));
     argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
