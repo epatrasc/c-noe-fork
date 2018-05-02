@@ -174,20 +174,20 @@ int main(int argc, char *argv[]) {
         mask = 0666;
         msgid = msgget(key, mask);
         if (msgid == -1) {
-            sleep(2000);//200ms
+            usleep(2000);//200ms
             msgid = msgget(key, mask);
         }
 
         if (msgrcv(msgid, &rcv, sizeof(int), 0, IPC_NOWAIT) == -1) {
             if (errno != ENOMSG) {
                 fprintf(stderr, "Message could not be received.\n");
-                exit(EXIT_FAILURE);
+                continue;
             }
-            usleep(10000);
-            if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
-                fprintf(stderr, "Message could not be received.\n");
-                exit(EXIT_FAILURE);
-            }
+//            //usleep(10000);
+//            if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
+//                fprintf(stderr, "Message could not be received.\n");
+//                continue;
+//            }
         }
         printf("QUEUE MSG PID_A:%d, ", rcv[0]);
         printf("QUEUE MSG PID_B:%d, ", rcv[1]);

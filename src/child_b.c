@@ -48,8 +48,8 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
     if (gen_a % gen_b == 0) {
         return true;
     }
-
-    if (mcd(gen_a, gen_b) >= gen_a / 3) {
+    printf("mcd(gen_a, gen_b): %d\n", mcd(gen_a, gen_b));
+    if (mcd(gen_a, gen_b) >= 1) {
         return true;
     }
 
@@ -88,18 +88,27 @@ int main(int argc, char *argv[]) {
     init_shmemory();
 
     struct child_a child;
-    int choice_id, foundMate;
+    int choice_id, foundMate=0;
+    int num_of_death=0;
+
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
-        printf("my_pid: %d | [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid,
+        child = shdata->children_a[i];
+        printf(" my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid,
                child.alive);
         if (shdata->children_a[i].alive == 0) {
             printf("shdata->children_a[%d] NOT alive \n", i);
+            num_of_death++;
+            if(num_of_death==shdata->cur_idx){
+                printf("PID %d: GAME OVER FOR ME\n", getpid());
+                exit(EXIT_FAILURE);
+            }
+
             continue;
         }
-        child = shdata->children_a[i];
 
         //evaluate candidate
         int answer = (int) isGood(child.genoma, my_info.genoma);
+        printf("GEN_A: %lu, GEN_B: %lu are compatible? %d\n",child.genoma, my_info.genoma,answer);
         if (answer) {
             choice_id = i;
             // Write message to A
@@ -109,6 +118,7 @@ int main(int argc, char *argv[]) {
             int fifo_a = open(pida_s, O_WRONLY);
             char *my_msg = calloc(sizeof(char), 1024);
 
+            printf("PID: %d | writing to A", getpid());
             int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
             write(fifo_a, my_msg, str_len);
             free(my_msg);
@@ -123,10 +133,11 @@ int main(int argc, char *argv[]) {
             mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
             // read answer
+            printf("PID: %d | reading respons from A...\n", getpid());
             int fifo_b = open(pid_s, O_RDONLY);
             ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
             printf("num_bytes: %li\n", num_bytes);
-            printf("out: %s\n", readbuf);
+            printf("PID: %d | A with pid %s has response: %s\n", getpid(), pid_s, readbuf);
 
             close(fifo_a);
             close(fifo_b);
@@ -134,11 +145,12 @@ int main(int argc, char *argv[]) {
             free(readbuf);
             free(pid_s);
 
-            if(readbuf=="1"){
+            if(readbuf[0]=='1'){
                 foundMate=1;
-                shdata->children_a[choice_id].alive = false;
+                shdata->children_a[choice_id].alive = 0;
+            }else if(i == shdata->cur_idx ){
+                i=0;
             }
-            printf("Has pid %s accepted? %d\n", pida_s, answer);
         }
     }
 
@@ -151,36 +163,41 @@ int main(int argc, char *argv[]) {
 //    }
 
 
+    if(foundMate==1) {
+        printf("PID: %d, contacting parent...\n",getpid());
+        // send info to gestore
+        int key, mask, msgid;
+        key = getppid();
+        mask = 0666;
+        msgid = msgget(key, mask);
 
-    // send info to gestore
-    int key, mask, msgid;
-    key = getppid();
-    mask = 0666;
-    msgid = msgget(key, mask);
-
-    if (msgid == -1) {
-        msgid = msgget(key, mask | IPC_CREAT);
         if (msgid == -1) {
-            fprintf(stderr, "Could not create message queue.\n");
-            exit(EXIT_FAILURE);
+            msgid = msgget(key, mask | IPC_CREAT);
+            if (msgid == -1) {
+                fprintf(stderr, "Could not create message queue.\n");
+                exit(EXIT_FAILURE);
+            }
         }
-    }
 
-    // Send messages ...
-    int pid_a_int = shdata->children_a[choice_id].pid;
-    int ret, msg[2] = {getpid(), pid_a_int};
-    ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
-    if (ret == -1) {
-        if (errno != EAGAIN) {
-            fprintf(stderr, "Message could not be sended.\n");
-            exit(EXIT_FAILURE);
+        // Send messages ...
+        int pid_a_int = shdata->children_a[choice_id].pid;
+        int ret, msg[2] = {getpid(), pid_a_int};
+        ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
+        if (ret == -1) {
+            if (errno != EAGAIN) {
+                fprintf(stderr, "Message could not be sended.\n");
+                exit(EXIT_FAILURE);
+            }
+            usleep(50000);//5 sec
+            //try again
+            if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
+                fprintf(stderr, "Message could not be sended.\n");
+                exit(EXIT_FAILURE);
+            }
         }
-        usleep(50000);//5 sec
-        //try again
-        if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
-            fprintf(stderr, "Message could not be sended.\n");
-            exit(EXIT_FAILURE);
-        }
+        printf("PID: %d, message to the parent sent.\n",getpid());
+    } else{
+        printf("I'm sad, no mate found");
     }
 
     printf("\n ---> CHILD B END | pid: %d <---\n", getpid());

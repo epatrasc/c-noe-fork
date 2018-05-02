@@ -35,7 +35,7 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= gen_a / 3) {
+    if (mcd(gen_a, gen_b) >= 10) {
         return true;
     }
 
@@ -96,7 +96,12 @@ int main(int argc, char *argv[]) {
 
                 //evaluate candidate
                 int answer = (int) isGood(my_info.genoma, genoma_b);
-                if (answer) flg_continua = 0;//TODO dangerus can end in loop
+                if (answer || flg_continua==2) {
+                    //TODO dangerus can end in loop
+                    flg_continua = 0;
+                    answer=1;
+                }
+
 
                 printf("accept pid %s? %d\n", pid_b, answer);
 
@@ -106,6 +111,8 @@ int main(int argc, char *argv[]) {
                 close(fifo_b);
             }
         }
+
+        flg_continua ++;
         close(fifo_a);
     }
 
