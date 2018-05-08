@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
             int fifo_a = open(pida_s, O_WRONLY);
             char *my_msg = calloc(sizeof(char), 1024);
 
-            printf("PID: %d | writing to A", getpid());
+            printf("PID: %d | writing to A\n", getpid());
             int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
             write(fifo_a, my_msg, str_len);
             free(my_msg);
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
 
 
 void init_shmemory() {
-    if ((shmid = shmget(key, sizeof(shdata), SHMFLG)) == 0) {
+    if ((shmid = shmget(key, getpagesize(), SHMFLG)) == 0) {
         perror("cannot get shared memory id | shdata\n");
         exit(EXIT_FAILURE);
     }
@@ -217,7 +217,7 @@ void init_shmemory() {
         exit(EXIT_FAILURE);
     }
 
-    if ((shmid = shmget(key + 1, getpagesize(), SHMFLG)) == 0) {
+    if ((shmid = shmget(key + 1, getpagesize() * 10, SHMFLG)) == 0) {
         perror("cannot get shared memory id | shdata->children_a \n");
         exit(EXIT_FAILURE);
     }

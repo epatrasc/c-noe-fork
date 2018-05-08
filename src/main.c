@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Message could not be received.\n");
                 continue;
             }
-//            //usleep(10000);
+//            //usleep(1000);
 //            if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
 //                fprintf(stderr, "Message could not be received.\n");
 //                continue;
@@ -270,10 +270,10 @@ void run_child(struct individuo figlio) {
 
 // ** SHARED MEMORY
 void init_shmemory() {
-    if ((shmid[0] = shmget(key, sizeof(shdata), SHMFLG)) == 0) die("parent shmget");
+    if ((shmid[0] = shmget(key, getpagesize(), SHMFLG)) == 0) die("parent shmget");
     if ((shdata = shmat(shmid[0], NULL, 0)) == 0) die("parent shmat shdata");
 
-    if ((shmid[1] = shmget(++key, getpagesize(), SHMFLG)) == 0) die("parent shmget");
+    if ((shmid[1] = shmget(++key, getpagesize() * 10, SHMFLG)) == 0) die("parent shmget");
     if ((shdata->children_a = shmat(shmid[1], NULL, 0)) == 0) die("parent shmat shdata->children_a");
 
     shdata->cur_idx = 0;

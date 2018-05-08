@@ -74,15 +74,16 @@ int main(int argc, char *argv[]) {
     char *pid_b = calloc(sizeof(char), 6);
 
     while (flg_continua >= 1) {
-        printf("waiting for type b request\n");
+        printf("waiting for type b request...\n");
         fifo_a = open(pid_s, O_RDONLY);
-        while (num_bytes = read(fifo_a, readbuf, BUF_SIZE)) {
-            if (num_bytes > 0) {
+        if (num_bytes = read(fifo_a, readbuf, BUF_SIZE)> 0) {
                 printf("out: %s\n", readbuf);
+                close(fifo_a);
 
                 char *nome_b;
                 unsigned long genoma_b;
                 char *token;
+
                 token = strsep(&readbuf, ",");
                 sprintf(pid_b, "%s", token);
                 token = strsep(&readbuf, ",");
@@ -109,11 +110,8 @@ int main(int argc, char *argv[]) {
                 int fifo_b = open(pid_b, O_WRONLY);
                 write(fifo_b, "%d", answer);
                 close(fifo_b);
-            }
         }
-
         flg_continua ++;
-        close(fifo_a);
     }
 
     free(readbuf);
