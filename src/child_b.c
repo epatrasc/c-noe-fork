@@ -48,7 +48,7 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
     if (gen_a % gen_b == 0) {
         return true;
     }
-    printf("mcd(gen_a, gen_b): %d\n", mcd(gen_a, gen_b));
+
     if (mcd(gen_a, gen_b) >= 1) {
         return true;
     }
@@ -70,9 +70,9 @@ int main(int argc, char *argv[]) {
     printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
 
     if (argc < 2) {
-        printf("I need name and genoma input from argv. \n");
+        printf("B | I need name and genoma input from argv. \n");
         for (int i = 0; i < argc; i++) {
-            printf("arg[%d]: %s \n ", i, argv[i]);
+            printf("B | arg[%d]: %s \n ", i, argv[i]);
         }
         exit(EXIT_FAILURE);
     }
@@ -81,9 +81,9 @@ int main(int argc, char *argv[]) {
     my_info.tipo = 'B';
     my_info.genoma = (unsigned long) strtol(argv[2], NULL, 10);
 
-    printf("my_info.nome: %s \n", my_info.nome);
-    printf("my_info.tipo: %c \n", my_info.tipo);
-    printf("my_info.genoma: %lu \n", my_info.genoma);
+    printf("B | my_info.nome: %s \n", my_info.nome);
+    printf("B | my_info.tipo: %c \n", my_info.tipo);
+    printf("B | my_info.genoma: %lu \n", my_info.genoma);
 
     init_shmemory();
 
@@ -91,15 +91,19 @@ int main(int argc, char *argv[]) {
     int choice_id, foundMate=0;
     int num_of_death=0;
 
+    char *pid_s = calloc(sizeof(char), 6);
+    sprintf(pid_s, "%d", getpid());
+    mkfifo(pid_s, S_IRUSR | S_IWUSR);
+
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
         child = shdata->children_a[i];
-        printf(" my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid,
+        printf("B | my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid,
                child.alive);
         if (shdata->children_a[i].alive == 0) {
-            printf("shdata->children_a[%d] NOT alive \n", i);
+            printf("B | shdata->children_a[%d] NOT alive \n", i);
             num_of_death++;
             if(num_of_death==shdata->cur_idx){
-                printf("PID %d: GAME OVER FOR ME\n", getpid());
+                printf("B | PID %d: GAME OVER FOR ME\n", getpid());
                 exit(EXIT_FAILURE);
             }
 
@@ -108,7 +112,7 @@ int main(int argc, char *argv[]) {
 
         //evaluate candidate
         int answer = (int) isGood(child.genoma, my_info.genoma);
-        printf("GEN_A: %lu, GEN_B: %lu are compatible? %d\n",child.genoma, my_info.genoma,answer);
+        printf("B | GEN_A: %lu, GEN_B: %lu are compatible? %d\n",child.genoma, my_info.genoma,answer);
         if (answer) {
             choice_id = i;
             // Write message to A
@@ -116,9 +120,15 @@ int main(int argc, char *argv[]) {
             sprintf(pida_s, "%d", child.pid);
 
             int fifo_a = open(pida_s, O_WRONLY);
+            if(fifo_a < 0){
+                printf("B | fifo_a<0 : %d\n", fifo_a);
+                sleep(1);
+                fifo_a = open(pida_s, O_WRONLY);
+            }
+
             char *my_msg = calloc(sizeof(char), 1024);
 
-            printf("PID: %d | writing to A\n", getpid());
+            printf("B | PID: %d | writing to A\n", getpid());
             int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
             write(fifo_a, my_msg, str_len);
             free(my_msg);
@@ -127,32 +137,29 @@ int main(int argc, char *argv[]) {
 
             //create fifo
             int BUF_SIZE = 1024;
-            char *pid_s = calloc(sizeof(char), 6);
             char *readbuf = calloc(sizeof(char), BUF_SIZE);
-            sprintf(pid_s, "%d", getpid());
-            mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
             // read answer
-            printf("PID: %d | reading respons from A...\n", getpid());
+            printf("B | PID: %d | reading response from A...\n", getpid());
             int fifo_b = open(pid_s, O_RDONLY);
             ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
-            printf("num_bytes: %li\n", num_bytes);
-            printf("PID: %d | A with pid %s has response: %s\n", getpid(), pid_s, readbuf);
+            printf("B | num_bytes: %li\n", num_bytes);
+            printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pid_s, readbuf);
 
-            close(fifo_a);
             close(fifo_b);
-            remove(pid_s);
             free(readbuf);
             free(pid_s);
 
             if(readbuf[0]=='1'){
                 foundMate=1;
                 shdata->children_a[choice_id].alive = 0;
-            }else if(i == shdata->cur_idx ){
+            }else if(i == shdata->cur_idx -1 ){
                 i=0;
             }
         }
     }
+
+    remove(pid_s);
 
     // TODO ho scelto A
 //    if (child.alive) {
@@ -164,7 +171,7 @@ int main(int argc, char *argv[]) {
 
 
     if(foundMate==1) {
-        printf("PID: %d, contacting parent...\n",getpid());
+        printf("B | PID: %d, contacting parent...\n",getpid());
         // send info to gestore
         int key, mask, msgid;
         key = getppid();
@@ -174,7 +181,7 @@ int main(int argc, char *argv[]) {
         if (msgid == -1) {
             msgid = msgget(key, mask | IPC_CREAT);
             if (msgid == -1) {
-                fprintf(stderr, "Could not create message queue.\n");
+                fprintf(stderr, "B | Could not create message queue.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -185,19 +192,19 @@ int main(int argc, char *argv[]) {
         ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
         if (ret == -1) {
             if (errno != EAGAIN) {
-                fprintf(stderr, "Message could not be sended.\n");
+                fprintf(stderr, "B | Message could not be sended.\n");
                 exit(EXIT_FAILURE);
             }
             usleep(50000);//5 sec
             //try again
             if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
-                fprintf(stderr, "Message could not be sended.\n");
+                fprintf(stderr, "B | Message could not be sended.\n");
                 exit(EXIT_FAILURE);
             }
         }
-        printf("PID: %d, message to the parent sent.\n",getpid());
+        printf("B | PID: %d, message to the parent sent.\n",getpid());
     } else{
-        printf("I'm sad, no mate found");
+        printf("B | I'm sad, no mate found");
     }
 
     printf("\n ---> CHILD B END | pid: %d <---\n", getpid());
@@ -208,22 +215,22 @@ int main(int argc, char *argv[]) {
 
 void init_shmemory() {
     if ((shmid = shmget(key, getpagesize(), SHMFLG)) == 0) {
-        perror("cannot get shared memory id | shdata\n");
+        perror("B | cannot get shared memory id | shdata\n");
         exit(EXIT_FAILURE);
     }
 
     if ((shdata = shmat(shmid, NULL, 0)) == (void *) -1) {
-        perror("cannot attach shared memory to address \n");
+        perror("B | cannot attach shared memory to address \n");
         exit(EXIT_FAILURE);
     }
 
     if ((shmid = shmget(key + 1, getpagesize() * 10, SHMFLG)) == 0) {
-        perror("cannot get shared memory id | shdata->children_a \n");
+        perror("B | cannot get shared memory id | shdata->children_a \n");
         exit(EXIT_FAILURE);
     }
 
     if ((shdata->children_a = shmat(shmid, NULL, 0)) < 0) {
-        perror("cannot attach shared memory to address shdata->children_a \n");
+        perror("B | cannot attach shared memory to address shdata->children_a \n");
         exit(EXIT_FAILURE);
     }
 }

@@ -85,6 +85,7 @@ void init_shmemory();
 void free_shmemory();
 
 void publish_shared_data(struct individuo figlio);
+char get_type_from_pid(pid_t pid, struct individuo figli[]);
 
 // Global variables
 int shmid[2];
@@ -94,17 +95,13 @@ const int SHMFLG = IPC_CREAT | 0666;
 
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
-unsigned long GENES = 1000000;
+unsigned long GENES = 10000;
 unsigned int BIRTH_DEATH = 5;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
 
 int main(int argc, char *argv[]) {
-    struct individuo figli[INIT_PEOPLE];
-    struct individuo figlio;
-    pid_t child_pid, pid_array[INIT_PEOPLE];
-
     //init steps
-    srand(time(NULL));
+    srand48(time(NULL));
     init_shmemory();
     compile_child_code('A');
     compile_child_code('B');
@@ -112,18 +109,22 @@ int main(int argc, char *argv[]) {
     run_parent(getpid(), getppid());
 
     for (int i = 0; i < argc; i++) {
-        printf("arg[%d]: %s \n ", i, argv[i]);
+        printf("P | arg[%d]: %s \n", i, argv[i]);
     }
 
     if (argc >= 1) {
         INIT_PEOPLE = atoi(argv[1]);
-        printf("INIT_PEOPLE: %d \n", INIT_PEOPLE);
+        printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
     }
+
+    pid_t child_pid;
+    struct individuo figli[INIT_PEOPLE];
 
     //init population
     for (int i = 0; i < INIT_PEOPLE; i++) {
+        printf("P | LOOP : %d\n", i);
         // generate child
-        figlio = gen_individuo();
+        struct individuo figlio = gen_individuo();
         child_pid = fork();
 
         /* Handle error create child*/
@@ -139,35 +140,45 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        printf("CHILD BORN[%d]: %d\n", i, child_pid);
+        printf("P | CHILD BORN[%d]: %d\n", i, child_pid);
 
         /* Perform actions specific to parent */
-        pid_array[i] = child_pid;
         figlio.pid = child_pid;
         figli[i] = figlio;
         publish_shared_data(figlio);
     }
 
-    printf("CHILD Generation END\n");
+    printf("P | CHILD Generation END\n");
 
     for (int i = 0; i < shdata->cur_idx; i++) {
         struct child_a child = shdata->children_a[i];
-        printf("GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
+        printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
 
     // make sure child set the signal handler
-    sleep(3);
+    sleep(1);
 
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++) {
-        printf("Sending SIGUSR1 to the child %d...\n", pid_array[i]);
-        kill(pid_array[i], SIGUSR1);
+        printf("P | Sending SIGUSR1 to the child %d...\n", figli[i].pid);
+        kill(figli[i].pid, SIGUSR1);
     }
 
     int status;
+    int a_death,b_death,e_death;
     while ((child_pid = wait(&status)) > 0) {
-        printf("Ended child : %d | status: %d \n", child_pid, status);
-
+        printf("P | Ended child : %d | status: %d \n", child_pid, status);
+        char type = get_type_from_pid(child_pid, figli);
+        if(type == 'E'){
+            e_death++;
+        }else{
+            type =='A' ? a_death++:b_death++;
+        }
+        printf("P | TYPE STAT | A: %d, B: %d, E: %d\n", a_death,b_death,e_death);
+        
+        if(status!=0){
+            continue;
+        }
         int key, mask, msgid, rcv[2], pid_a, pid_b;
 
         key = getpid();
@@ -180,7 +191,7 @@ int main(int argc, char *argv[]) {
 
         if (msgrcv(msgid, &rcv, sizeof(int), 0, IPC_NOWAIT) == -1) {
             if (errno != ENOMSG) {
-                fprintf(stderr, "Message could not be received.\n");
+                fprintf(stderr, "P | Message could not be received.\n");
                 continue;
             }
 //            //usleep(1000);
@@ -189,8 +200,8 @@ int main(int argc, char *argv[]) {
 //                continue;
 //            }
         }
-        printf("QUEUE MSG PID_A:%d, ", rcv[0]);
-        printf("QUEUE MSG PID_B:%d, ", rcv[1]);
+        printf("P | QUEUE MSG PID_A:%d, ", rcv[0]);
+        printf("P | QUEUE MSG PID_B:%d, ", rcv[1]);
     }
 
     free_shmemory();
@@ -199,7 +210,7 @@ int main(int argc, char *argv[]) {
 }
 
 unsigned long gen_genoma() {
-    return (unsigned long) rand_interval(2, GENES);
+    return (unsigned long) lrand48();
 }
 
 char *gen_name(char *name) {
@@ -217,7 +228,6 @@ char *gen_name(char *name) {
 }
 
 char gen_type() {
-    srand(time(0));
     return rand_interval(1, 10) % 2 == 0 ? 'A' : 'B';
 }
 
@@ -233,7 +243,7 @@ struct individuo gen_individuo() {
 }
 
 void run_parent(pid_t gestore_pid, pid_t pg_pid) {
-    printf("* PARENT: PID=%d, PPID=%d\n", gestore_pid, pg_pid);
+    printf("P |  PID=%d, PPID=%d\n", gestore_pid, pg_pid);
 }
 
 void run_child(struct individuo figlio) {
@@ -301,13 +311,13 @@ void publish_shared_data(struct individuo figlio) {
 /****** UTILS ******/
 static void wake_up_process(int signo) {
     if (signo == SIGUSR1) {
-        printf("WAKEUP  process %d | received signal SIGUSR1\n", getpid());
+        printf("P | WAKEUP  process %d | received signal SIGUSR1\n", getpid());
     }
 }
 
 unsigned int rand_interval(unsigned int min, unsigned int max) {
     // reference https://stackoverflow.com/a/17554531
-    int r;
+    unsigned int r;
     const unsigned int range = 1 + max - min;
     const unsigned int buckets = RAND_MAX / range;
     const unsigned int limit = buckets * range;
@@ -326,7 +336,7 @@ unsigned int compile_child_code(char type) {
     char *file[] = {"gcc ./src/child_a.c -o ./exec/child_a.exe", "gcc ./src/child_b.c -o ./exec/child_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
 
-    printf("COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
+    printf("P | COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
 
     return status;
 }
@@ -340,4 +350,13 @@ int len_of(int value) {
     }
 
     return l;
+}
+
+char get_type_from_pid(pid_t pid, struct individuo figli[]){
+    for(int i=0;i<INIT_PEOPLE; i++){
+        if(figli[i].pid == pid){
+            return figli[i].tipo;
+        }
+    }
+    return 'E';
 }
