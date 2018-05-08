@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
         mask = 0666;
         msgid = msgget(key, mask);
         if (msgid == -1) {
-            usleep(2000);//200ms
+            usleep(50000);//50ms
             msgid = msgget(key, mask);
         }
 

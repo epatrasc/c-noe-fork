@@ -35,7 +35,7 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= 10) {
+    if (mcd(gen_a, gen_b) >= 1) {
         return true;
     }
 
@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
     int fifo_a;
     char *pid_b = calloc(sizeof(char), 6);
 
-    int max_try = 2;
-    while (flg_continua >= 1 || max_try ==0) {
+    bool continua = true;
+    while (flg_continua <= 3 && continua) {
         printf("A | waiting for type b request...\n");
         fifo_a = open(pid_s, O_RDONLY);
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
                 int answer = (int) isGood(my_info.genoma, genoma_b);
                 if (answer || flg_continua==2) {
                     //TODO dangerus can end in loop
-                    flg_continua = 0;
+                    continua = false;
                     answer=1;
                 }
 
@@ -121,11 +121,12 @@ int main(int argc, char *argv[]) {
         }
         close(fifo_a);
         flg_continua ++;
-        max_try--;
     }
 
     free(readbuf);
     remove(pid_s);
+
+    printf("A | PID: %d, contacting parent...\n",getpid());
 
     // send info to gestore
     int key, mask, msgid;
@@ -146,12 +147,15 @@ int main(int argc, char *argv[]) {
     int pid_b_int = (int) strtol(pid_b, (char **) NULL, 10);
     int ret, msg[2] = {getpid(), pid_b_int};
     ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
+
+    printf("A | PID: %d, Send message ...\n",getpid());
+
     if (ret == -1) {
         if (errno != EAGAIN) {
             fprintf(stderr, "A |Message could not be sended.\n");
             exit(EXIT_FAILURE);
         }
-        usleep(50000);//5 sec
+        usleep(50000);//50 ms
         //try again
         if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
             fprintf(stderr, "A | Message could not be sended.\n");
@@ -159,7 +163,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("\n ---> CHILD A END | pid: %d <---\n", getpid());
+    printf("A | PID: %d, Message sent \n",getpid());
+    printf(" ---> CHILD A END | pid: %d <---\n", getpid());
 
     exit(EXIT_SUCCESS);
 }

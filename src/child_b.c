@@ -121,7 +121,6 @@ int main(int argc, char *argv[]) {
 
             int fifo_a = open(pida_s, O_WRONLY);
             if(fifo_a < 0){
-                printf("B | fifo_a<0 : %d\n", fifo_a);
                 sleep(1);
                 fifo_a = open(pida_s, O_WRONLY);
             }
@@ -195,7 +194,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "B | Message could not be sended.\n");
                 exit(EXIT_FAILURE);
             }
-            usleep(50000);//5 sec
+            usleep(50000);//50ms
             //try again
             if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
                 fprintf(stderr, "B | Message could not be sended.\n");
@@ -207,7 +206,7 @@ int main(int argc, char *argv[]) {
         printf("B | I'm sad, no mate found");
     }
 
-    printf("\n ---> CHILD B END | pid: %d <---\n", getpid());
+    printf(" ---> CHILD B END | pid: %d <---\n", getpid());
 
     exit(EXIT_SUCCESS);
 }
