@@ -85,6 +85,7 @@ void init_shmemory();
 void free_shmemory();
 
 void publish_shared_data(struct individuo figlio);
+
 char get_type_from_pid(pid_t pid, struct individuo figli[]);
 
 // Global variables
@@ -125,6 +126,9 @@ int main(int argc, char *argv[]) {
         printf("P | LOOP : %d\n", i);
         // generate child
         struct individuo figlio = gen_individuo();
+        if(i==0)figlio.tipo= 'A';
+        if(i==1)figlio.tipo= 'B';
+        if(i==2)figlio.tipo= 'B';
         child_pid = fork();
 
         /* Handle error create child*/
@@ -165,18 +169,18 @@ int main(int argc, char *argv[]) {
     }
 
     int status;
-    int a_death,b_death,e_death;
+    int a_death, b_death, e_death;
     while ((child_pid = wait(&status)) > 0) {
         printf("P | Ended child : %d | status: %d \n", child_pid, status);
         char type = get_type_from_pid(child_pid, figli);
-        if(type == 'E'){
+        if (type == 'E') {
             e_death++;
-        }else{
-            type =='A' ? a_death++:b_death++;
+        } else {
+            type == 'A' ? a_death++ : b_death++;
         }
-        printf("P | TYPE STAT | A: %d, B: %d, E: %d\n", a_death,b_death,e_death);
-        
-        if(status!=0){
+        printf("P | TYPE STAT | A: %d, B: %d, E: %d\n", a_death, b_death, e_death);
+
+        if (status != 0) {
             continue;
         }
         int key, mask, msgid, rcv[2], pid_a, pid_b;
@@ -201,9 +205,9 @@ int main(int argc, char *argv[]) {
 //            }
         }
         printf("P | QUEUE MSG PID_A:%d, ", rcv[0]);
-        printf("P | QUEUE MSG PID_B:%d, ", rcv[1]);
+        printf("P | QUEUE MSG PID_B:%d \n", rcv[1]);
     }
-
+    exit(-1);
     free_shmemory();
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
@@ -352,9 +356,9 @@ int len_of(int value) {
     return l;
 }
 
-char get_type_from_pid(pid_t pid, struct individuo figli[]){
-    for(int i=0;i<INIT_PEOPLE; i++){
-        if(figli[i].pid == pid){
+char get_type_from_pid(pid_t pid, struct individuo figli[]) {
+    for (int i = 0; i < INIT_PEOPLE; i++) {
+        if (figli[i].pid == pid) {
             return figli[i].tipo;
         }
     }

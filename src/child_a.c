@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 
         if (num_bytes = read(fifo_a, readbuf, BUF_SIZE)> 0) {
                 printf("A | recieved request: %s\n", readbuf);
-
+                close(fifo_a);
                 char *nome_b;
                 unsigned long genoma_b;
                 char *token;
@@ -118,8 +118,10 @@ int main(int argc, char *argv[]) {
                 printf("A | fifo_b: %d\n", fifo_b);
                 write(fifo_b, my_msg, str_len);
                 close(fifo_b);
+        }else{
+            close(fifo_a);
         }
-        close(fifo_a);
+        
         flg_continua ++;
     }
 

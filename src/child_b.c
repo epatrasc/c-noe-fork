@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/msg.h>
-
+#include <sys/file.h>
 
 struct individuo {
     char tipo;
@@ -58,6 +58,8 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
 
 void init_shmemory();
 
+void send_msg_to_gestore(int pid_a);
+
 const int SHMFLG = IPC_CREAT | 0666;
 const key_t key = 1060;
 unsigned int shmid;
@@ -87,130 +89,133 @@ int main(int argc, char *argv[]) {
 
     init_shmemory();
 
-    struct child_a child;
-    int choice_id, foundMate=0;
-    int num_of_death=0;
+    int foundMate = 0;
 
     char *pid_s = calloc(sizeof(char), 6);
+    char *pida_s = calloc(sizeof(char), 6);
     sprintf(pid_s, "%d", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
-        child = shdata->children_a[i];
-        printf("B | my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid,
-               child.alive);
+        printf("B | my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i,
+               shdata->children_a[i].genoma, shdata->children_a[i].pid,
+               shdata->children_a[i].alive);
         if (shdata->children_a[i].alive == 0) {
             printf("B | shdata->children_a[%d] NOT alive \n", i);
-            num_of_death++;
-            if(num_of_death==shdata->cur_idx){
-                printf("B | PID %d: GAME OVER FOR ME\n", getpid());
-                exit(EXIT_FAILURE);
-            }
-
             continue;
         }
 
         //evaluate candidate
-        int answer = (int) isGood(child.genoma, my_info.genoma);
-        printf("B | GEN_A: %lu, GEN_B: %lu are compatible? %d\n",child.genoma, my_info.genoma,answer);
-        if (answer) {
-            choice_id = i;
-            // Write message to A
-            char *pida_s = calloc(sizeof(char), 6);
-            sprintf(pida_s, "%d", child.pid);
+        int answer = (int) isGood(shdata->children_a[i].genoma, my_info.genoma);
+        printf("B | GEN_A: %lu, GEN_B: %lu are compatible? %d\n", shdata->children_a[i].genoma, my_info.genoma, answer);
+        if (answer == 0) {
+            continue;
+        }
 
-            int fifo_a = open(pida_s, O_WRONLY);
-            if(fifo_a < 0){
-                sleep(1);
-                fifo_a = open(pida_s, O_WRONLY);
+        // Write message to A
+        sprintf(pida_s, "%d", shdata->children_a[i].pid);
+        printf("B | pid: %d, shdata->children_a[i].: %s\n", getpid(), pida_s);
+        int fifo_a;
+        while (shdata->children_a[i].alive == 1) {
+            printf("B | before open | shdata->children_a[i].alive: %d\n", shdata->children_a[i].alive);
+            if ((fifo_a = open(pida_s, O_WRONLY | O_NONBLOCK)) == -1) {
+                printf("B | fifo_a == %d\n", fifo_a);
+
+            } else if (flock(fifo_a, LOCK_EX) == 0) {
+                printf("B | pid %d prende controllo di a %s\n", getpid(), pida_s);
+                break;
             }
 
-            char *my_msg = calloc(sizeof(char), 1024);
+            printf("B | [%d] pid %d, i'm loping\n", i, getpid());
+            usleep(50000);
 
-            printf("B | PID: %d | writing to A\n", getpid());
-            int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
-            write(fifo_a, my_msg, str_len);
-            free(my_msg);
-            free(pida_s);
-            close(fifo_a);
+        }
 
-            //create fifo
-            int BUF_SIZE = 1024;
-            char *readbuf = calloc(sizeof(char), BUF_SIZE);
+        if (shdata->children_a[i].alive == 0) {
+            printf("B | shdata->children_a[i].pid %d is dead\n", shdata->children_a[i].pid);
+            continue;
+        }
 
-            // read answer
-            printf("B | PID: %d | reading response from A...\n", getpid());
-            int fifo_b = open(pid_s, O_RDONLY);
-            ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
-            printf("B | num_bytes: %li\n", num_bytes);
-            printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pid_s, readbuf);
+        char *my_msg = calloc(sizeof(char), 1024);
 
-            close(fifo_b);
-            free(readbuf);
-            free(pid_s);
+        printf("B | PID: %d | writing to A\n", getpid());
+        int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
+        write(fifo_a, my_msg, str_len);
+        free(my_msg);
+        close(fifo_a);
 
-            if(readbuf[0]=='1'){
-                foundMate=1;
-                shdata->children_a[choice_id].alive = 0;
-            }else if(i == shdata->cur_idx -1 ){
-                i=0;
-            }
+        //create fifo
+        int BUF_SIZE = 1024;
+        char *readbuf = calloc(sizeof(char), BUF_SIZE);
+
+        // read answer
+        printf("B | PID: %d | reading response from A..\n", getpid());
+        int fifo_b = open(pid_s, O_RDONLY);
+        ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
+        printf("B | num_bytes: %li\n", num_bytes);
+        printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pida_s, readbuf);
+
+        close(fifo_b);
+        free(readbuf);
+        free(pid_s);
+        printf("B | readbuf[0] == '1': %d\n", strtol(readbuf, NULL, 10));
+        if (strtol(readbuf, NULL, 10) == 1) {
+            foundMate = 1;
+            shdata->children_a[i].alive = 0;
+            printf("B | pid %d | foundMate | shdata->children_a[i].alive: %d\n", getpid(), shdata->children_a[i].alive);
         }
     }
 
-    remove(pid_s);
-
-    // TODO ho scelto A
-//    if (child.alive) {
-//        printf("No type A found\n");
-//        printf("\n ---> CHILD B END | pid: %d <---\n", getpid());
-//
-//        exit(EXIT_FAILURE);
-//    }
-
-
-    if(foundMate==1) {
-        printf("B | PID: %d, contacting parent...\n",getpid());
-        // send info to gestore
-        int key, mask, msgid;
-        key = getppid();
-        mask = 0666;
-        msgid = msgget(key, mask);
-
-        if (msgid == -1) {
-            msgid = msgget(key, mask | IPC_CREAT);
-            if (msgid == -1) {
-                fprintf(stderr, "B | Could not create message queue.\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        // Send messages ...
-        int pid_a_int = shdata->children_a[choice_id].pid;
-        int ret, msg[2] = {getpid(), pid_a_int};
-        ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
-        if (ret == -1) {
-            if (errno != EAGAIN) {
-                fprintf(stderr, "B | Message could not be sended.\n");
-                exit(EXIT_FAILURE);
-            }
-            usleep(50000);//50ms
-            //try again
-            if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
-                fprintf(stderr, "B | Message could not be sended.\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-        printf("B | PID: %d, message to the parent sent.\n",getpid());
-    } else{
-        printf("B | I'm sad, no mate found");
+    if (foundMate == 0) {
+        printf("B | I'm sad, no mate found. Now I will die\n");
+        free(pida_s);
+        remove(pid_s);
+        exit(EXIT_FAILURE);
     }
+
+    send_msg_to_gestore(strtol(pida_s, NULL, 10));
 
     printf(" ---> CHILD B END | pid: %d <---\n", getpid());
+
+    free(pida_s);
+    remove(pid_s);
 
     exit(EXIT_SUCCESS);
 }
 
+void send_msg_to_gestore(int pid_a) {
+    printf("B | PID: %d, contacting parent..\n", getpid());
+    // send info to gestore
+    int key, mask, msgid;
+    key = getppid();
+    mask = 0666;
+    msgid = msgget(key, mask);
+
+    if (msgid == -1) {
+        msgid = msgget(key, mask | IPC_CREAT);
+        if (msgid == -1) {
+            fprintf(stderr, "B | Could not create message queue.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Send messages ..
+    int ret, msg[2] = {getpid(), pid_a};
+    ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
+    if (ret == -1) {
+        if (errno != EAGAIN) {
+            fprintf(stderr, "B | Message could not be sended.\n");
+            exit(EXIT_FAILURE);
+        }
+        usleep(50000);//50ms
+        //try again
+        if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
+            fprintf(stderr, "B | Message could not be sended.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    printf("B | PID: %d, message to the parent sent.\n", getpid());
+}
 
 void init_shmemory() {
     if ((shmid = shmget(key, getpagesize(), SHMFLG)) == 0) {
