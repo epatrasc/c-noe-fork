@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 #include <sys/file.h>
+#include <sys/sem.h>
 
 struct individuo {
     char tipo;
@@ -68,6 +69,7 @@ struct shared_data *shdata;
 int main(int argc, char *argv[]) {
     char *my_val, nome;
     struct individuo my_info;
+    struct sembuf fifo_sem;
 
     printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
 
@@ -111,31 +113,42 @@ int main(int argc, char *argv[]) {
         if (answer == 0) {
             continue;
         }
+        
+        int pida = (int) strtol(pida_s, NULL, 10);
+        pid_t sem_id = semget(pida, 1, IPC_CREAT | 0666);
+        semctl(sem_id, 0, SETVAL, getpid());
+        fifo_sem.sem_num = 0;
+        fifo_sem.sem_flg = 0;
+        fifo_sem.sem_op = -1;
+		semop(sem_id, &fifo_sem, 1);
 
         // Write message to A
+        int fifo_a;
         sprintf(pida_s, "%d", shdata->children_a[i].pid);
         printf("B | pid: %d, shdata->children_a[i].: %s\n", getpid(), pida_s);
-        int fifo_a;
-        while (shdata->children_a[i].alive == 1) {
-            printf("B | before open | shdata->children_a[i].alive: %d\n", shdata->children_a[i].alive);
-            if ((fifo_a = open(pida_s, O_WRONLY | O_NONBLOCK)) == -1) {
-                printf("B | fifo_a == %d\n", fifo_a);
-
-            } else if (flock(fifo_a, LOCK_EX) == 0) {
-                printf("B | pid %d prende controllo di a %s\n", getpid(), pida_s);
-                break;
-            }
-
-            printf("B | [%d] pid %d, i'm loping\n", i, getpid());
-            usleep(50000);
-
+        printf("B | before open | shdata->children_a[i].alive: %d\n", shdata->children_a[i].alive);
+        if ((fifo_a = open(pida_s, O_WRONLY)) == -1) {
+            printf("B | fifo_a == %d\n", fifo_a);
         }
+        // while (shdata->children_a[i].alive == 1) {
+        //     printf("B | before open | shdata->children_a[i].alive: %d\n", shdata->children_a[i].alive);
+        //     if ((fifo_a = open(pida_s, O_WRONLY | O_NONBLOCK)) == -1) {
+        //         printf("B | fifo_a == %d\n", fifo_a);
+
+        //     } else if (flock(fifo_a, LOCK_EX) == 0) {
+        //         printf("B | pid %d prende controllo di a %s\n", getpid(), pida_s);
+        //         break;
+        //     }
+
+        //     printf("B | [%d] pid %d, i'm loping\n", i, getpid());
+        //     usleep(50000);
+
+        // }
 
         if (shdata->children_a[i].alive == 0) {
             printf("B | shdata->children_a[i].pid %d is dead\n", shdata->children_a[i].pid);
             continue;
         }
-
         char *my_msg = calloc(sizeof(char), 1024);
 
         printf("B | PID: %d | writing to A\n", getpid());
@@ -152,13 +165,17 @@ int main(int argc, char *argv[]) {
         printf("B | PID: %d | reading response from A..\n", getpid());
         int fifo_b = open(pid_s, O_RDONLY);
         ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
+        // Release the resource
+        fifo_sem.sem_op = 1;
+        semop(sem_id, &fifo_sem, 1);
+
         printf("B | num_bytes: %li\n", num_bytes);
         printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pida_s, readbuf);
 
         close(fifo_b);
         free(readbuf);
         free(pid_s);
-        printf("B | readbuf[0] == '1': %d\n", strtol(readbuf, NULL, 10));
+        printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
         if (strtol(readbuf, NULL, 10) == 1) {
             foundMate = 1;
             shdata->children_a[i].alive = 0;

@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/msg.h>
+#include <sys/sem.h>
 
 struct individuo {
     char tipo;
@@ -44,6 +45,7 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
+    struct sembuf fifo_sem;
 
     printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
     if (argc < 3) {
@@ -53,6 +55,10 @@ int main(int argc, char *argv[]) {
         }
         exit(EXIT_FAILURE);
     }
+    //creat sem 
+    pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
+    semctl(sem_id, 0, SETVAL, 0);
+    fifo_sem.sem_num = 0;
 
     my_info.nome = argv[1];
     my_info.tipo = 'A';
@@ -76,9 +82,12 @@ int main(int argc, char *argv[]) {
     bool continua = true;
     while (flg_continua <= 3 && continua) {
         printf("A | waiting for type b request...\n");
+        fifo_sem.sem_op=1; // rilascio semaphoro
+        semop(sem_id,&fifo_sem,1);
+
         fifo_a = open(pid_s, O_RDONLY);
 
-        if (num_bytes = read(fifo_a, readbuf, BUF_SIZE)> 0) {
+        if ((num_bytes = read(fifo_a, readbuf, BUF_SIZE))> 0) {
                 printf("A | recieved request: %s\n", readbuf);
                 close(fifo_a);
                 char *nome_b;
