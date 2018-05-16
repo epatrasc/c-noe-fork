@@ -109,8 +109,13 @@ int main(int argc, char *argv[]) {
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
     TEST_ERROR;
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
+<<<<<<< HEAD
 //        struct child_a child = shdata->children_a[i];
 //        printf("B | pid: %d | shdata[%d]: genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid, child.alive);
+=======
+        struct child_a child = shdata->children_a[i];
+        printf("B | pid: %d | shdata[%d]: genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i, child.genoma, child.pid, child.alive);
+>>>>>>> 488a66d09b39b2f1ade437eadc04fe7a2523bd9c
 
         // skip death child
         if (shdata->children_a[i].alive == 0) {
@@ -119,12 +124,21 @@ int main(int argc, char *argv[]) {
         }
 
         //evaluate candidate
+<<<<<<< HEAD
         int answer = (int) isForMe(shdata->children_a[i].genoma, my_info.genoma);
         printf("B | GEN_A: %lu, GEN_B: %lu are compatible? %d\n",shdata->children_a[i].genoma, my_info.genoma, answer);
         if (answer == 0) continue;
 
         // access to the child semaphore
         int pida = shdata->children_a[i].pid;
+=======
+        int answer = (int) isForMe(child.genoma, my_info.genoma);
+        printf("B | GEN_A: %lu, GEN_B: %lu are compatible? %d\n",child.genoma, my_info.genoma, answer);
+        if (answer == 0) continue;
+
+        // access to the child semaphore
+        int pida = child.pid;
+>>>>>>> 488a66d09b39b2f1ade437eadc04fe7a2523bd9c
         pid_t sem_id = semget(pida, 1 ,IPC_CREAT | 0666);
 
         // print semaphore status
@@ -137,13 +151,18 @@ int main(int argc, char *argv[]) {
         printf("B1 | pid %d | took control of %d semaphore\n", getpid(),sem_id);
         sleep(2);
         printf("B2 | pid %d | took control of %d semaphore\n", getpid(),sem_id);
+<<<<<<< HEAD
         if(shdata->children_a[i].alive == 0){
+=======
+        if(child.alive == 0){
+>>>>>>> 488a66d09b39b2f1ade437eadc04fe7a2523bd9c
             printf("B | shdata->children_a[%d] NOT alive \n", i);
             // Release the resource
             semop(sem_id, &sem_unlock, 1);
             TEST_ERROR;
             continue;
         }
+<<<<<<< HEAD
 
         // Write message to A
         sprintf(pida_s, "%d", shdata->children_a[i].pid);
@@ -154,6 +173,18 @@ int main(int argc, char *argv[]) {
         int fifo_a = open(pida_s, O_WRONLY);
         TEST_ERROR;
 
+=======
+
+        // Write message to A
+        sprintf(pida_s, "%d", child.pid);
+        TEST_ERROR;
+        printf("B | pid: %d, shdata->children_a[i]: %s\n", getpid(), pida_s);
+        printf("B | before open | shdata->children_a[i].alive: %d\n", child.alive);
+
+        int fifo_a = open(pida_s, O_WRONLY);
+        TEST_ERROR;
+
+>>>>>>> 488a66d09b39b2f1ade437eadc04fe7a2523bd9c
         if (fifo_a == -1) {
             printf("B | error fifo_a returned: %d\n", fifo_a);
         }
@@ -188,8 +219,13 @@ int main(int argc, char *argv[]) {
         if ((result = strtol(readbuf, NULL, 10)) == 1) {
             printf("B | pid %d | foundMate \n", getpid());
             foundMate = 1;
+<<<<<<< HEAD
             pid_a_winner = shdata->children_a[i].pid;
             shdata->children_a[i].alive = 0;
+=======
+            pid_a_winner = child.pid;
+            child.alive = 0;
+>>>>>>> 488a66d09b39b2f1ade437eadc04fe7a2523bd9c
             TEST_ERROR;
         }
 
