@@ -14,12 +14,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c6b126c-ee14-4ae8-812e-4d91f964b32c" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compile.sh" beforeDir="false" afterPath="$PROJECT_DIR$/compile.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mem.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/child_a.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_a.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/child_b.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_b.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -44,8 +39,8 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2415">
-              <caret line="161" column="28" selection-start-line="161" selection-start-column="28" selection-end-line="161" selection-end-column="28" />
+            <state relative-caret-position="-246">
+              <caret line="297" column="55" selection-start-line="297" selection-start-column="45" selection-end-line="297" selection-end-column="55" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -53,11 +48,20 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="queue.c" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/queue.c">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="105">
+              <caret line="7" selection-start-line="7" selection-end-line="14" />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="child_a.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/child_a.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2880">
-              <caret line="192" selection-start-line="192" selection-end-line="192" />
+            <state relative-caret-position="753">
+              <caret line="91" column="35" selection-start-line="91" selection-start-column="35" selection-end-line="91" selection-end-column="35" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -68,8 +72,11 @@
       <file leaf-file-name="child_b.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/child_b.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="108" column="61" lean-forward="true" selection-start-line="108" selection-start-column="61" selection-end-line="108" selection-end-column="61" />
+            <state relative-caret-position="439">
+              <caret line="191" column="33" selection-start-line="191" selection-start-column="33" selection-end-line="191" selection-end-column="33" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -78,7 +85,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>run_child</find>
       <find>t:</find>
       <find>end wait</find>
       <find>random</find>
@@ -97,7 +103,6 @@
       <find>char gen_type();</find>
       <find>char gen_type(</find>
       <find>MAX_POPOLATION</find>
-      <find>TEST_ERROR</find>
       <find>buffer</find>
       <find>INIT_PEOPLE</find>
       <find>mask</find>
@@ -107,11 +112,15 @@
       <find>rand_interval</find>
       <find>..</find>
       <find>srand</find>
+      <find>TEST_ERROR</find>
+      <find>TEST_ERROR;;</find>
+      <find>pid_s</find>
     </findStrings>
     <replaceStrings>
       <replace>printf(</replace>
       <replace>figli</replace>
       <replace>.</replace>
+      <replace>TEST_ERROR;</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -135,8 +144,8 @@
         <option value="$PROJECT_DIR$/src/read_msg.c" />
         <option value="$PROJECT_DIR$/src/queue.c" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/src/child_a.c" />
         <option value="$PROJECT_DIR$/src/main.c" />
+        <option value="$PROJECT_DIR$/src/child_a.c" />
         <option value="$PROJECT_DIR$/src/child_b.c" />
       </list>
     </option>
@@ -164,7 +173,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -180,12 +188,19 @@
             <path>
               <item name="c_noe_fork" type="b2602c69:ProjectViewProjectNode" />
               <item name="c-noe-fork" type="462c0819:PsiDirectoryNode" />
+              <item name="cmake-build-debug" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="c_noe_fork" type="b2602c69:ProjectViewProjectNode" />
+              <item name="c-noe-fork" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -256,14 +271,15 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="150335000" />
+    <option name="totallyTimeSpent" value="157311000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1599" height="1027" extended-state="0" />
+    <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16032954" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1606469" />
       <window_info anchor="bottom" id="TODO" order="4" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.33489582" weight="0.32479507" />
       <window_info anchor="bottom" id="CMake" order="11" sideWeight="0.49609375" weight="0.32879376" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="10" />
@@ -271,15 +287,24 @@
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.51458335" side_tool="true" weight="0.32682925" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.4859375" weight="0.31182796" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.4859375" visible="true" weight="0.3125" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16032954" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="TODO" order="4" />
+      <window_info anchor="bottom" id="Version Control" order="10" />
+      <window_info anchor="bottom" id="CMake" order="11" sideWeight="0.49609375" weight="0.32879376" />
+      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.51458335" side_tool="true" weight="0.32682925" />
       <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.4859375" weight="0.31182796" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.39427084" weight="0.32684427" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.33489582" weight="0.32580644" />
+      <window_info id="Favorites" order="2" side_tool="true" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -293,44 +318,33 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>167</line>
+          <line>166</line>
           <option name="timeStamp" value="174" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>143</line>
+          <line>142</line>
           <option name="timeStamp" value="177" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>125</line>
-          <option name="timeStamp" value="182" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>124</line>
-          <option name="timeStamp" value="183" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>112</line>
-          <option name="timeStamp" value="184" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="185" />
+      <option name="time" value="187" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
-        <watch expression="shdata-&gt;children_a[i].alive=0" language="ObjectiveC" />
-        <watch expression="shdata-&gt;children_a[i].alive=1" language="ObjectiveC" />
+        <watch expression="shdata-&gt;children_a[i].alive" language="ObjectiveC" />
       </configuration>
     </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>shdata-&gt;children_a[i].alive</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>shdata-&gt;children_a[i].alive=1</expression-string>
         <language-id>ObjectiveC</language-id>
@@ -338,11 +352,6 @@
       </expression>
       <expression>
         <expression-string>shdata-&gt;children_a[i].alive=0</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>shdata-&gt;children_a[i].alive</expression-string>
         <language-id>ObjectiveC</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -599,24 +608,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/child_a.c">
+    <entry file="file://$PROJECT_DIR$/src/queue.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2880">
-          <caret line="192" selection-start-line="192" selection-end-line="192" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/queue.c" />
-    <entry file="file://$PROJECT_DIR$/src/main.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2415">
-          <caret line="161" column="28" selection-start-line="161" selection-start-column="28" selection-end-line="161" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="105">
+          <caret line="7" selection-start-line="7" selection-end-line="14" />
         </state>
       </provider>
     </entry>
@@ -627,10 +622,33 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-246">
+          <caret line="297" column="55" selection-start-line="297" selection-start-column="45" selection-end-line="297" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/child_a.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="753">
+          <caret line="91" column="35" selection-start-line="91" selection-start-column="35" selection-end-line="91" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/child_b.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="108" column="61" lean-forward="true" selection-start-line="108" selection-start-column="61" selection-end-line="108" selection-end-column="61" />
+        <state relative-caret-position="439">
+          <caret line="191" column="33" selection-start-line="191" selection-start-column="33" selection-end-line="191" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
