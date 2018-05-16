@@ -15,6 +15,14 @@
 #include <sys/file.h>
 #include <sys/sem.h>
 
+#define TEST_ERROR    if (errno) {fprintf(stderr, \
+					   "%s:%d: PID=%5d: Error %d (%s)\n",\
+					   __FILE__,\
+					   __LINE__,\
+					   getpid(),\
+					   errno,\
+					   strerror(errno));}
+
 struct individuo {
     char tipo;
     char *nome;
@@ -97,7 +105,7 @@ int main(int argc, char *argv[]) {
     char *pida_s = calloc(sizeof(char), 6);
     sprintf(pid_s, "%d", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
-
+    TEST_ERROR
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
         printf("B | my_pid: %d | shdata -> [%d] genoma: %lu | child_a pid: %d | alive: %d \n", getpid(), i,
                shdata->children_a[i].genoma, shdata->children_a[i].pid,
@@ -114,14 +122,18 @@ int main(int argc, char *argv[]) {
             continue;
         }
         
-        int pida = (int) strtol(pida_s, NULL, 10);
-        pid_t sem_id = semget(pida, 1, IPC_CREAT | 0666);
-        semctl(sem_id, 0, SETVAL, getpid());
+        int pida = shdata->children_a[i].pid;//(int) strtol(pida_s, NULL, 10);
+        pid_t sem_id = semget(pida, 1, 0666);
+        semctl(sem_id, 0, SETVAL, 0);
+        TEST_ERROR
+        printf("B | pid %d | took control of %d semaphore", getpid(),sem_id);
         fifo_sem.sem_num = 0;
         fifo_sem.sem_flg = 0;
         fifo_sem.sem_op = -1;
+        printf("B | pid %d | pre semop", getpid());
 		semop(sem_id, &fifo_sem, 1);
-
+        TEST_ERROR
+        printf("B | pid %d | post semop", getpid());
         // Write message to A
         int fifo_a;
         sprintf(pida_s, "%d", shdata->children_a[i].pid);

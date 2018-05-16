@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
 //                continue;
 //            }
         }
-        printf("P | QUEUE MSG PID_A:%d, ", rcv[0]);
+        printf("P | QUEUE MSG PID_A:%d \n", rcv[0]);
         printf("P | QUEUE MSG PID_B:%d \n", rcv[1]);
     }
     exit(-1);

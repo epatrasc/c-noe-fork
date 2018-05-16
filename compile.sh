@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mkdir exec
 for entry in src/*; do
     export file=$(echo $(basename "$entry") | cut -f 1 -d '.')

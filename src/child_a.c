@@ -14,6 +14,14 @@
 #include <sys/msg.h>
 #include <sys/sem.h>
 
+#define TEST_ERROR    if (errno) {fprintf(stderr, \
+					   "%s:%d: PID=%5d: Error %d (%s)\n",\
+					   __FILE__,\
+					   __LINE__,\
+					   getpid(),\
+					   errno,\
+					   strerror(errno));}
+
 struct individuo {
     char tipo;
     char *nome;
@@ -58,6 +66,7 @@ int main(int argc, char *argv[]) {
     //creat sem 
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     semctl(sem_id, 0, SETVAL, 0);
+    TEST_ERROR
     fifo_sem.sem_num = 0;
 
     my_info.nome = argv[1];
@@ -84,6 +93,7 @@ int main(int argc, char *argv[]) {
         printf("A | waiting for type b request...\n");
         fifo_sem.sem_op=1; // rilascio semaphoro
         semop(sem_id,&fifo_sem,1);
+        TEST_ERROR
 
         fifo_a = open(pid_s, O_RDONLY);
 
@@ -173,7 +183,8 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-
+    semctl(sem_id, 0, IPC_RMID);
+    TEST_ERROR
     printf("A | PID: %d, Message sent \n",getpid());
     printf(" ---> CHILD A END | pid: %d <---\n", getpid());
 
