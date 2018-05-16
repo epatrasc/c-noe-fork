@@ -53,7 +53,6 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
-    struct sembuf fifo_sem;
 
     printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
     if (argc < 3) {
@@ -65,9 +64,10 @@ int main(int argc, char *argv[]) {
     }
     //creat sem 
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    semctl(sem_id, 0, SETVAL, 0);
-    TEST_ERROR
-    fifo_sem.sem_num = 0;
+    printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
+    semctl(sem_id, 0, SETVAL, 1);
+    TEST_ERROR;
+
 
     my_info.nome = argv[1];
     my_info.tipo = 'A';
@@ -91,9 +91,7 @@ int main(int argc, char *argv[]) {
     bool continua = true;
     while (flg_continua <= 3 && continua) {
         printf("A | waiting for type b request...\n");
-        fifo_sem.sem_op=1; // rilascio semaphoro
-        semop(sem_id,&fifo_sem,1);
-        TEST_ERROR
+        TEST_ERROR;
 
         fifo_a = open(pid_s, O_RDONLY);
 
@@ -183,8 +181,10 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    semctl(sem_id, 0, IPC_RMID);
-    TEST_ERROR
+
+    //semctl(sem_id, 0, IPC_RMID,0);
+
+
     printf("A | PID: %d, Message sent \n",getpid());
     printf(" ---> CHILD A END | pid: %d <---\n", getpid());
 

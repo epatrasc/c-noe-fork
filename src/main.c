@@ -123,7 +123,6 @@ int main(int argc, char *argv[]) {
 
     //init population
     for (int i = 0; i < INIT_PEOPLE; i++) {
-        printf("P | LOOP : %d\n", i);
         // generate child
         struct individuo figlio = gen_individuo();
         if(i==0)figlio.tipo= 'A';
@@ -144,7 +143,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        printf("P | CHILD BORN[%d]: %d\n", i, child_pid);
+        printf("P | CHILD BORN[%d]: %d %c\n", i, child_pid, figlio.tipo);
 
         /* Perform actions specific to parent */
         figlio.pid = child_pid;
