@@ -65,7 +65,7 @@ bool isForMe(unsigned long gen_a, unsigned long gen_b) {
     return false;
 }
 
-void init_shmemory();
+void open_shmemory();
 
 void send_msg_to_gestore(int pid_a);
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     printf("B | my_info.tipo: %c \n", my_info.tipo);
     printf("B | my_info.genoma: %lu \n", my_info.genoma);
 
-    init_shmemory();
+    open_shmemory();
 
     int foundMate = 0;
 
@@ -247,8 +247,8 @@ void send_msg_to_gestore(int pid_a) {
     printf("B | PID: %d, message to the parent sent.\n", getpid());
 }
 
-void init_shmemory() {
-    if ((shmid = shmget(key, getpagesize(), SHMFLG)) == 0) {
+void open_shmemory() {
+    if ((shmid = shmget(key, 0, 0)) == 0) {
         perror("B | cannot get shared memory id | shdata\n");
         exit(EXIT_FAILURE);
     }
