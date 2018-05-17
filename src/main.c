@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <sys/msg.h>
+#include <sys/sem.h>
 
 #define die(msg_error)      \
     do                      \
@@ -31,6 +32,7 @@
                 errno,                             \
                 strerror(errno));                  \
     }
+
 
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
@@ -158,6 +160,12 @@ int main(int argc, char *argv[]) {
         printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
 
+    //creat sem to sync shared memory
+    pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
+    printf("P | pid %d | sem_id: %d\n", getpid(),sem_id);
+    semctl(sem_id, 0, SETVAL, 1);
+    TEST_ERROR;
+
     // make sure child set the signal handler
     sleep(1);
 
@@ -168,7 +176,7 @@ int main(int argc, char *argv[]) {
     }
 
     int status;
-    int a_death, b_death, e_death;
+    int a_death=0, b_death=0, e_death=0;
     while ((child_pid = wait(&status)) > 0) {
         printf("P | Ended child : %d | status: %d \n", child_pid, status);
         char type = get_type_from_pid(child_pid, figli);
@@ -197,17 +205,19 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "P | Message could not be received.\n");
                 continue;
             }
-//            //usleep(1000);
-//            if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
-//                fprintf(stderr, "Message could not be received.\n");
-//                continue;
-//            }
+           usleep(50000);
+           if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
+               fprintf(stderr, "Message could not be received.\n");
+               continue;
+           }
         }
-        printf("P | QUEUE MSG PID_A:%d \n", rcv[0]);
-        printf("P | QUEUE MSG PID_B:%d \n", rcv[1]);
+        printf("P | QUEUE MSG[0]:%d \n", rcv[0]);
+        printf("P | QUEUE MSG[1]:%d \n", rcv[1]);
     }
     exit(-1);
     free_shmemory();
+    // Now the semaphore can be deallocated
+	semctl(sem_id, 0, IPC_RMID);
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
 }

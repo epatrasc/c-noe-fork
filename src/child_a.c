@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
                 //evaluate candidate
                 int answer = (int) isGood(my_info.genoma, genoma_b);
                 if (answer || flg_continua==2) {
-                    //TODO dangerus can end in loop
+                    //TODO dangerous can end in loop
                     continua = false;
                     answer=1;
                 }
