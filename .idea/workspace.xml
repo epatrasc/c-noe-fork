@@ -14,9 +14,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c6b126c-ee14-4ae8-812e-4d91f964b32c" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/child_a.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_a.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/child_b.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_b.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -39,11 +36,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.c" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2460">
-              <caret line="164" column="31" selection-start-line="164" selection-start-column="31" selection-end-line="164" selection-end-column="31" />
+            <state relative-caret-position="233">
+              <caret line="298" column="15" selection-start-line="298" selection-start-column="9" selection-end-line="298" selection-end-column="15" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -60,11 +57,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="child_b.c" pinned="false" current-in-tab="true">
+      <file leaf-file-name="child_b.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/child_b.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="136" column="53" selection-start-line="136" selection-start-column="53" selection-end-line="136" selection-end-column="53" />
+            <state relative-caret-position="197">
+              <caret line="109" selection-start-line="109" selection-end-line="109" />
             </state>
           </provider>
         </entry>
@@ -73,7 +70,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>end wait</find>
       <find>random</find>
       <find>dprintf(2,</find>
       <find>shared_data</find>
@@ -103,6 +99,7 @@
       <find>TEST_ERROR;;</find>
       <find>pid_s</find>
       <find>shdata-&gt;children_a[i].</find>
+      <find>init_shmemory</find>
     </findStrings>
     <replaceStrings>
       <replace>printf(</replace>
@@ -134,8 +131,8 @@
         <option value="$PROJECT_DIR$/src/queue.c" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/child_a.c" />
-        <option value="$PROJECT_DIR$/src/main.c" />
         <option value="$PROJECT_DIR$/src/child_b.c" />
+        <option value="$PROJECT_DIR$/src/main.c" />
       </list>
     </option>
   </component>
@@ -214,7 +211,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.child_b.exe">
+  <component name="RunManager" selected="Application.main.exe">
     <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" EXPLICIT_BUILD_TARGET_NAME="all" />
     <configuration name="child_a.exe" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="A 91353" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="child_a.exe" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" />
     <configuration name="child_b.exe" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="B 556221" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="child_b.exe" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" />
@@ -250,16 +247,15 @@
       <workItem from="1525804813637" duration="5331000" />
       <workItem from="1525885127245" duration="838000" />
       <workItem from="1526483508635" duration="3310000" />
-      <workItem from="1526588966324" duration="1444000" />
+      <workItem from="1526588966324" duration="2742000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="161913000" />
+    <option name="totallyTimeSpent" value="163211000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="1027" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15973479" />
       <window_info anchor="bottom" id="TODO" order="4" />
@@ -292,12 +288,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>173</line>
+          <line>175</line>
           <option name="timeStamp" value="174" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>143</line>
+          <line>145</line>
           <option name="timeStamp" value="177" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
@@ -307,24 +303,66 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>108</line>
+          <line>109</line>
           <option name="timeStamp" value="189" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.c</url>
+          <line>296</line>
+          <option name="timeStamp" value="190" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="190" />
+      <option name="time" value="191" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
-        <watch expression="shdata-&gt;children_a[i].alive" language="ObjectiveC" />
-        <watch expression="shdata-&gt;children_a[index].alive" language="ObjectiveC" />
+        <watch expression="shdata" language="ObjectiveC" />
+        <watch expression="shdata-&gt;children_a[0].alive=true" language="ObjectiveC" />
+        <watch expression="shdata-&gt;children_a[100]" language="ObjectiveC" />
+        <watch expression="shdata-&gt;children_a[0].genoma=2212" language="ObjectiveC" />
       </configuration>
     </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>shdata-&gt;children_a[100]</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata-&gt;children_a[0]</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata-&gt;children_a[0].genoma=2212</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata-&gt;children_a[0].alive=true</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata-&gt;children_a[1]</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata-&gt;children_a</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>shdata</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>shdata-&gt;children_a[index].alive</expression-string>
         <language-id>ObjectiveC</language-id>
@@ -337,41 +375,6 @@
       </expression>
       <expression>
         <expression-string>shdata-&gt;children_a[i].alive</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>shdata-&gt;children_a[i].alive=1</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>shdata-&gt;children_a[i].alive=0</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>readbuf[0]</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>gen_a / 3</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>mcd(gen_a, gen_b)</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>argv[1]</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>argv[2]</expression-string>
         <language-id>ObjectiveC</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -622,20 +625,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.c">
+    <entry file="file://$PROJECT_DIR$/src/child_b.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2460">
-          <caret line="164" column="31" selection-start-line="164" selection-start-column="31" selection-end-line="164" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="197">
+          <caret line="109" selection-start-line="109" selection-end-line="109" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/child_b.c">
+    <entry file="file://$PROJECT_DIR$/src/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="136" column="53" selection-start-line="136" selection-start-column="53" selection-end-line="136" selection-end-column="53" />
+        <state relative-caret-position="233">
+          <caret line="298" column="15" selection-start-line="298" selection-start-column="9" selection-end-line="298" selection-end-column="15" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -39,7 +39,7 @@ struct child_a {
 
 struct shared_data {
     unsigned long cur_idx;
-    struct child_a *children_a;
+    struct child_a children_a[];
 };
 
 int mcd(unsigned long a, unsigned long b) {
@@ -75,7 +75,6 @@ void send_msg_to_gestore(int pid_a);
 void exit_handler(void);
 
 const int SHMFLG = IPC_CREAT | 0666;
-const key_t key = 1060;
 
 struct sembuf sem_1_l = {0, -1, 0};
 struct sembuf sem_1_u = {0, 1, 0};
@@ -120,7 +119,7 @@ int main(int argc, char *argv[]) {
     char *pida_s = calloc(sizeof(char), 6);
     int pid_a_winner;
     sprintf(pid_s, "%d", getpid());
-    int ret = mkfifo(pid_s, S_IRUSR | S_IWUSR);
+    mkfifo(pid_s, S_IRUSR | S_IWUSR);
     TEST_ERROR;
     for (int i = 0; i < shdata->cur_idx && !foundMate; i++) {
         struct child_a child;
@@ -164,7 +163,7 @@ int main(int argc, char *argv[]) {
         if (!isAlive(i)) {
             printf("B | shdata->children_a[%d] NOT alive \n", i);
             // Release the resource
-            semop(sem_id, &sem_2_l, 1);
+            semop(sem_id, &sem_2_u, 1);
             TEST_ERROR;
             continue;
         }
@@ -172,7 +171,6 @@ int main(int argc, char *argv[]) {
         printf("B2 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
         // Write message to A
         sprintf(pida_s, "%d", child.pid);
-        TEST_ERROR;
         printf("B | pid: %d, shdata->children_a[i]: %s\n", getpid(), pida_s);
         printf("B | before open | child.alive: %d\n", isAlive(i));
 
@@ -188,9 +186,7 @@ int main(int argc, char *argv[]) {
         int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
         write(fifo_a, my_msg, str_len);
         free(my_msg);
-        TEST_ERROR;
         close(fifo_a);
-        TEST_ERROR;
         printf("B | PID: %d | writing to A: end\n", getpid());
 
         // read answer
@@ -206,7 +202,6 @@ int main(int argc, char *argv[]) {
         close(fifo_b);
         free(readbuf);
         free(pid_s);
-        TEST_ERROR;
 
         printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
 
@@ -215,7 +210,6 @@ int main(int argc, char *argv[]) {
             foundMate = 1;
             pid_a_winner = child.pid;
             setDead(i);
-            TEST_ERROR;
         }
 
         // Release the resource
@@ -272,6 +266,7 @@ void send_msg_to_gestore(int pid_a) {
 }
 
 void open_shmemory() {
+    key_t key = ftok("shdata", 1);
     if ((shmid = shmget(key, 0, 0)) == 0) {
         perror("B | cannot get shared memory id | shdata\n");
         exit(EXIT_FAILURE);
@@ -281,37 +276,18 @@ void open_shmemory() {
         perror("B | cannot attach shared memory to address \n");
         exit(EXIT_FAILURE);
     }
-
-    if ((shmid = shmget(key + 1, getpagesize() * 10, SHMFLG)) == 0) {
-        perror("B | cannot get shared memory id | shdata->children_a \n");
-        exit(EXIT_FAILURE);
-    }
-
-    if ((shdata->children_a = shmat(shmid, NULL, 0)) < 0) {
-        perror("B | cannot attach shared memory to address shdata->children_a \n");
-        exit(EXIT_FAILURE);
-    }
 }
 
 bool isAlive(int index) {
-    printf("B | PID: %d, isAlive before sem %lu\n", getpid(), shdata->cur_idx);
     semop(sem_shm_id, &sem_1_l, 1);
-    TEST_ERROR
-    printf("B | PID: %d, isAlive after sem %lu\n", getpid(), shdata->cur_idx);
-    bool alive = shdata->children_a[index].alive ? true : false;
-    printf("B | PID: %d, isAlive alive after\n", getpid());
-    semop(sem_shm_id, &sem_1_u, 1);
-    TEST_ERROR;
-    printf("B | PID: %d | shdata[%d]: %d\n", getpid(), index, alive);
+    bool alive = shdata->children_a[index].alive;
+    semop(sem_shm_id, &sem_1_u, 1);;
     return alive;
 }
 
 void setDead(int index) {
-    printf("B | PID: %d, setDead before sem \n", getpid());
     semop(sem_shm_id, &sem_1_l, 1);
-    printf("B | PID: %d, setDead after sem \n", getpid());
     shdata->children_a[index].alive = false;
-    printf("B | PID: %d, setDead after sem \n", getpid());
     semop(sem_shm_id, &sem_1_u, 1);
 }
 
@@ -320,5 +296,5 @@ void exit_handler(void)
     printf("B | PID: %d | exit_handler \n", getpid());
     // shmdt(shdata->children_a);
     // shmdt(shdata);
-    abort();
+    //abort();
 }

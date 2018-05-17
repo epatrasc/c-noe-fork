@@ -33,6 +33,7 @@
                 strerror(errno));                  \
     }
 
+#define MAX_CHILDREN = 1000;
 
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
@@ -53,7 +54,7 @@ struct child_a {
 
 struct shared_data {
     unsigned long cur_idx;
-    struct child_a *children_a;
+    struct child_a children_a[];
 };
 
 struct stats {
@@ -293,11 +294,9 @@ void run_child(struct individuo figlio) {
 
 // ** SHARED MEMORY
 void init_shmemory() {
-    if ((shmid[0] = shmget(key, getpagesize(), SHMFLG)) == 0) die("parent shmget");
+    key = ftok("shdata", 1);
+    if ((shmid[0] = shmget(key, getpagesize() * 1000, SHMFLG)) == 0) die("parent shmget");
     if ((shdata = shmat(shmid[0], NULL, 0)) == 0) die("parent shmat shdata");
-
-    if ((shmid[1] = shmget(++key, getpagesize() * 10, SHMFLG)) == 0) die("parent shmget");
-    if ((shdata->children_a = shmat(shmid[1], NULL, 0)) == 0) die("parent shmat shdata->children_a");
 
     shdata->cur_idx = 0;
 }
