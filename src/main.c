@@ -92,7 +92,7 @@ void publish_shared_data(struct individuo figlio);
 char get_type_from_pid(pid_t pid, struct individuo figli[]);
 
 // Global variables
-int shmid[2];
+int shmid;
 key_t key = 1060;
 struct shared_data *shdata;
 const int SHMFLG = IPC_CREAT | 0666;
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
         printf("P | QUEUE MSG[0]:%d \n", rcv[0]);
         printf("P | QUEUE MSG[1]:%d \n", rcv[1]);
     }
-    exit(-1);
+
     free_shmemory();
     // Now the semaphore can be deallocated
 	semctl(sem_id, 0, IPC_RMID);
@@ -295,17 +295,15 @@ void run_child(struct individuo figlio) {
 // ** SHARED MEMORY
 void init_shmemory() {
     key = ftok("shdata", 1);
-    if ((shmid[0] = shmget(key, getpagesize() * 1000, SHMFLG)) == 0) die("parent shmget");
-    if ((shdata = shmat(shmid[0], NULL, 0)) == 0) die("parent shmat shdata");
+    if ((shmid = shmget(key, getpagesize() * 1000, SHMFLG)) == 0) die("parent shmget");
+    if ((shdata = shmat(shmid, NULL, 0)) == 0) die("parent shmat shdata");
 
     shdata->cur_idx = 0;
 }
 
 void free_shmemory() {
-    shmdt(shdata->children_a);
     shmdt(shdata);
-    while (shmctl(shmid[0], IPC_RMID, NULL)) TEST_ERROR;
-    while (shmctl(shmid[1], IPC_RMID, NULL)) TEST_ERROR;
+    while (shmctl(shmid, IPC_RMID, NULL)) TEST_ERROR;
 }
 
 void publish_shared_data(struct individuo figlio) {

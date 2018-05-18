@@ -44,7 +44,7 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= 1) {
+    if (mcd(gen_a, gen_b) >= 5) {
         return true;
     }
 
