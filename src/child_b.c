@@ -62,7 +62,7 @@ bool isAlive(int index);
 void setDead(int index);
 void send_msg_to_gestore(int pid_a);
 void exit_handler(void);
-int contact_patner(int index, struct individuo my_info, char *pid_s);
+int contact_patner(int index, struct individuo my_info, int pida);
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
@@ -105,10 +105,17 @@ int main(int argc, char *argv[]) {
     int foundMate = 0;
     while(!foundMate){
         int index = -1;
-
+        printf("B | PID: %d, Cerco patner...\n", getpid());
         if((index = searchPatner(my_info, shdata))>=0){
-            pid_a_winner = shdata->children_a[index].pid;
-            foundMate = contact_patner(index, my_info, pid_s);
+            printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
+            
+            int pida =  shdata->children_a[index].pid;
+            if((foundMate = contact_patner(index, my_info, pida)) == 1){
+                printf("B | PID: %d, patner ha accettato: %d\n", getpid(), index);
+                pid_a_winner = pida;
+            }else{
+                printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), index);
+            }
         }
         usleep(50000);
     }
@@ -215,12 +222,13 @@ int searchPatner(struct individuo my_info, struct shared_data *shdata){
     return patnerIndex;
 }
 
-int contact_patner(int index, struct individuo my_info, char *pid_s){
+int contact_patner(int index, struct individuo my_info, int pida){
     struct child_a child;
     char *pida_s = calloc(sizeof(char), 6);
-    
+    char *pid_s = calloc(sizeof(char), 6);
+    sprintf(pid_s, "%d", getpid());
+
     // access to the child semaphore
-    int pida = child.pid;
     pid_t sem_id = semget(pida, 1, IPC_CREAT | 0666);
     
     // print semaphore status
@@ -284,8 +292,9 @@ int contact_patner(int index, struct individuo my_info, char *pid_s){
 
     printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
 
+    int foundMate = 0;
     if (strtol(readbuf, NULL, 10) != 1) {
-        return 0;
+        foundMate = 1;
     }
 
     printf("B | pid %d | foundMate \n", getpid());
@@ -297,7 +306,7 @@ int contact_patner(int index, struct individuo my_info, char *pid_s){
     semop(sem_id, &sem_2_u, 1);
     TEST_ERROR;
 
-    return 1;
+    return foundMate;
 }
 
 bool isAlive(int index) {

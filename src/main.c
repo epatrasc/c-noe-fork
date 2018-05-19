@@ -64,32 +64,20 @@ struct stats {
 };
 
 unsigned long gen_genoma();
-
 char *gen_name(char *name);
-
 char gen_type();
-
 struct individuo gen_individuo();
-
 void run_parent(pid_t gestore_pid, pid_t pg_pid);
-
 void run_child(struct individuo figlio);
-
 unsigned int rand_interval(unsigned int min, unsigned int max);
-
 int len_of(int x);
-
 static void wake_up_process(int signo);
-
 unsigned int compile_child_code(char type);
-
 void init_shmemory();
-
 void free_shmemory();
-
 void publish_shared_data(struct individuo figlio);
-
 char get_type_from_pid(pid_t pid, struct individuo figli[]);
+//void alarm_handler(int sig);
 
 // Global variables
 int shmid;
@@ -175,6 +163,15 @@ int main(int argc, char *argv[]) {
         printf("P | Sending SIGUSR1 to the child %d...\n", figli[i].pid);
         kill(figli[i].pid, SIGUSR1);
     }
+
+    // struct sigaction sa, sa_old;
+    // sa.sa_handler = &Alarm_handler;
+    // sa.sa_flags = 0;
+    // if (sigaction(SIGALRM, &sa, &sa_old) == -1) {  //settaggi handler
+    //     perror("ERRORE SIGACTION");
+    //     exit(EXIT_FAILURE);
+    // }
+    // signal(SIGALRM, alarm_handler);
 
     int status;
     int a_death=0, b_death=0, e_death=0;
@@ -370,3 +367,34 @@ char get_type_from_pid(pid_t pid, struct individuo figli[]) {
     }
     return 'E';
 }
+
+// void alarm_handler(int sig){
+//     extern char **argvarb;
+//     int i,status;
+//     pid_t Child;
+//     extern bool terminato;
+//     struct sembuf palla;
+//     extern pid_t pallaID;
+//     free(argvarb);
+    
+//     palla.sem_num=0;
+//     palla.sem_op=-1;    // tolgo la palla per la terminazione corretta di tutti i processi
+//     semop(pallaID,&palla,1);
+    
+//     signal(SIGTERM, SIG_IGN);
+    
+//     for(i=0; i<3; i++){         //deallocazione
+//         kill(Spid[i],SIGTERM);
+        
+//         while((Child = wait(&status)) !=-1); //aspetto la terminazione delle squadre e del fato
+            
+//     }
+    
+//     if(semctl(pallaID,0,IPC_RMID)==-1)      //rimuovo semaforo palla
+//         perror("errore rimozione del semaforo");
+    
+//     printf("________________________FINE PARTITA______________________\n\n");
+//     printf("   IL PUNTEGGIO FINALE E' :  SQUADRA A: %d   SQUADRA B: %d\n\n",Punt_A,Punt_B);
+//     terminato=TRUE;
+// }
+
