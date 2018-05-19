@@ -33,17 +33,18 @@
                 strerror(errno));                  \
     }
 
-#define MAX_CHILDREN = 1000;
-
-const int MIN_CHAR = 65; // A
-const int MAX_CHAR = 90; // Z
-
 struct individuo {
     char tipo;
     char *nome;
     unsigned long genoma;
     pid_t pid;
     bool alive;
+};
+
+struct  popolazione {
+    size_t size;
+    unsigned int cur_idx;
+    struct individuo *individui;
 };
 
 struct child_a {
@@ -67,6 +68,7 @@ unsigned long gen_genoma();
 char *gen_name(char *name);
 char gen_type();
 struct individuo gen_individuo();
+void mate_and_fork(struct individuo a, struct individuo b);
 void run_parent(pid_t gestore_pid, pid_t pg_pid);
 void run_child(struct individuo figlio);
 unsigned int rand_interval(unsigned int min, unsigned int max);
@@ -76,14 +78,24 @@ unsigned int compile_child_code(char type);
 void init_shmemory();
 void free_shmemory();
 void publish_shared_data(struct individuo figlio);
-char get_type_from_pid(pid_t pid, struct individuo figli[]);
+char get_type_from_pid(pid_t pid, struct popolazione);
+struct individuo get_individuo_by_pid(int pid, struct popolazione);
+void init_societa(int init_pop);
+void add_to_societa(struct individuo);
+void del_societa ();
+
 //void alarm_handler(int sig);
+
+//costants
+const int MIN_CHAR = 65; // A
+const int MAX_CHAR = 90; // Z
+const int SHMFLG = IPC_CREAT | 0666;
 
 // Global variables
 int shmid;
 key_t key = 1060;
 struct shared_data *shdata;
-const int SHMFLG = IPC_CREAT | 0666;
+struct popolazione societa;
 
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
@@ -104,15 +116,23 @@ int main(int argc, char *argv[]) {
         printf("P | arg[%d]: %s \n", i, argv[i]);
     }
 
-    if (argc >= 1) {
-        INIT_PEOPLE = atoi(argv[1]);
-        printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
+    if (argc < 2) {
+        printf("P | insufficient arguments\n");
+        exit(EXIT_FAILURE);
     }
 
-    pid_t child_pid;
-    struct individuo figli[INIT_PEOPLE];
+    if(atoi(argv[1]) < 2){
+        printf("P | initial population is less then 2\n");
+        exit(EXIT_FAILURE);
+    }
 
+    INIT_PEOPLE = atoi(argv[1]);
+    printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
+
+    init_societa(INIT_PEOPLE);
+    
     //init population
+    pid_t child_pid;
     for (int i = 0; i < INIT_PEOPLE; i++) {
         // generate child
         struct individuo figlio = gen_individuo();
@@ -138,7 +158,7 @@ int main(int argc, char *argv[]) {
 
         /* Perform actions specific to parent */
         figlio.pid = child_pid;
-        figli[i] = figlio;
+        add_to_societa(figlio);
         publish_shared_data(figlio);
     }
 
@@ -160,8 +180,8 @@ int main(int argc, char *argv[]) {
 
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++) {
-        printf("P | Sending SIGUSR1 to the child %d...\n", figli[i].pid);
-        kill(figli[i].pid, SIGUSR1);
+        printf("P | Sending SIGUSR1 to the child %d...\n", societa.individui[i].pid);
+        kill(societa.individui[i].pid, SIGUSR1);
     }
 
     // struct sigaction sa, sa_old;
@@ -177,7 +197,7 @@ int main(int argc, char *argv[]) {
     int a_death=0, b_death=0, e_death=0;
     while ((child_pid = wait(&status)) > 0) {
         printf("P | Ended child : %d | status: %d \n", child_pid, status);
-        char type = get_type_from_pid(child_pid, figli);
+        char type = get_type_from_pid(child_pid, societa);
         if (type == 'E') {
             e_death++;
         } else {
@@ -211,6 +231,10 @@ int main(int argc, char *argv[]) {
         }
         printf("P | QUEUE MSG[0]:%d \n", rcv[0]);
         printf("P | QUEUE MSG[1]:%d \n", rcv[1]);
+
+        struct individuo a = get_individuo_by_pid(rcv[0], societa);
+        struct individuo b = get_individuo_by_pid(rcv[1], societa);
+        mate_and_fork(a,b);
     }
 
     free_shmemory();
@@ -359,13 +383,77 @@ int len_of(int value) {
     return l;
 }
 
-char get_type_from_pid(pid_t pid, struct individuo figli[]) {
-    for (int i = 0; i < INIT_PEOPLE; i++) {
-        if (figli[i].pid == pid) {
-            return figli[i].tipo;
+char get_type_from_pid(pid_t pid, struct popolazione societa) {
+    for (int i = 0; i < societa.cur_idx; i++) {
+        if (societa.individui[i].pid == pid) {
+            return societa.individui[i].tipo;
         }
     }
     return 'E';
+}
+
+struct individuo get_individuo_by_pid(int pid, struct  popolazione societa){
+    for (int i = 0; i < societa.cur_idx; i++) {
+        if (societa.individui[i].pid == pid) {
+            return societa.individui[i];
+        }
+    }
+    struct individuo no_match;
+
+    return no_match;
+}
+
+void mate_and_fork(struct individuo a, struct individuo b){
+    struct individuo new_born;
+    pid_t child_pid;
+    
+    new_born = gen_individuo();
+
+    child_pid = fork();
+    if (child_pid < 0) {
+        die(strerror(errno));
+    }
+
+    /* Perform actions specific to child */
+    if (child_pid == 0) {
+        run_child(new_born);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("P | mate_and_fork CHILD BORN: %d %c\n", child_pid, new_born.tipo);
+
+    /* Perform actions specific to parent */
+    new_born.pid = child_pid;
+    add_to_societa(new_born);
+    publish_shared_data(new_born);
+}
+
+void init_societa(int  init_pop){
+    size_t size = init_pop * sizeof (struct individuo);
+    societa.individui = malloc (size);
+    if (societa.individui == NULL) {
+        free (societa.individui);
+    }
+
+    societa.size = size;
+    societa.cur_idx = 0;
+}
+
+void add_to_societa(struct individuo child){
+    if(societa.size == societa.cur_idx + 1){
+        size_t new_size = (societa.size + 50) * sizeof (struct individuo);
+        societa.individui = realloc(societa.individui, new_size);
+        societa.size = new_size;
+    }
+    societa.individui[societa.cur_idx++] = child;
+}
+
+void del_societa () {
+    if (societa.individui != NULL) {
+        free (societa.individui);
+    }
+    societa.size = 0;
+    societa.cur_idx = 0;
 }
 
 // void alarm_handler(int sig){

@@ -14,13 +14,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c6b126c-ee14-4ae8-812e-4d91f964b32c" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/src/alarm_loop.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/child_b.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/child_b.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/queue.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shm_write.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shn_read.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/struct_alloc.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -42,11 +36,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.c" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="398">
-              <caret line="307" selection-start-line="307" selection-end-line="307" />
+            <state relative-caret-position="308">
+              <caret line="438" column="22" lean-forward="true" selection-start-line="438" selection-start-column="22" selection-end-line="438" selection-end-column="22" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -63,11 +57,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="child_b.c" pinned="false" current-in-tab="true">
+      <file leaf-file-name="child_b.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/child_b.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
+            <state relative-caret-position="469">
+              <caret line="121" selection-start-line="121" selection-end-line="121" />
             </state>
           </provider>
         </entry>
@@ -76,7 +70,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>random</find>
       <find>dprintf(2,</find>
       <find>shared_data</find>
       <find>population</find>
@@ -106,6 +99,7 @@
       <find>pid_s</find>
       <find>shdata-&gt;children_a[i].</find>
       <find>init_shmemory</find>
+      <find>init_societa</find>
     </findStrings>
     <replaceStrings>
       <replace>printf(</replace>
@@ -137,8 +131,8 @@
         <option value="$PROJECT_DIR$/src/queue.c" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/child_a.c" />
-        <option value="$PROJECT_DIR$/src/main.c" />
         <option value="$PROJECT_DIR$/src/child_b.c" />
+        <option value="$PROJECT_DIR$/src/main.c" />
       </list>
     </option>
   </component>
@@ -223,7 +217,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.child_b.exe">
+  <component name="RunManager" selected="Application.main.exe">
     <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" EXPLICIT_BUILD_TARGET_NAME="all" />
     <configuration name="child_a.exe" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="A 91353" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="child_a.exe" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" />
     <configuration name="child_b.exe" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="B 556221" PASS_PARENT_ENVS_2="true" PROJECT_NAME="c_noe_fork" TARGET_NAME="child_b.exe" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="c_noe_fork" RUN_TARGET_NAME="child_b.exe" />
@@ -260,12 +254,12 @@
       <workItem from="1525885127245" duration="838000" />
       <workItem from="1526483508635" duration="3310000" />
       <workItem from="1526588966324" duration="3380000" />
-      <workItem from="1526660445544" duration="934000" />
+      <workItem from="1526660445544" duration="1814000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="164783000" />
+    <option name="totallyTimeSpent" value="165663000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1600" height="1027" extended-state="6" />
@@ -273,15 +267,15 @@
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15959468" />
       <window_info anchor="bottom" id="TODO" order="4" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.33375555" weight="0.32473117" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.33248892" weight="0.32473117" />
       <window_info anchor="bottom" id="CMake" order="11" sideWeight="0.49609375" weight="0.32879376" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="10" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.39427084" weight="0.32684427" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="8" sideWeight="0.51551616" side_tool="true" visible="true" weight="0.31182796" />
+      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.51678276" side_tool="true" visible="true" weight="0.31182796" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.48448384" visible="true" weight="0.31182796" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.48321724" visible="true" weight="0.31182796" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -302,23 +296,18 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>175</line>
+          <line>183</line>
           <option name="timeStamp" value="174" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>145</line>
+          <line>153</line>
           <option name="timeStamp" value="177" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>312</line>
+          <line>319</line>
           <option name="timeStamp" value="188" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/main.c</url>
-          <line>296</line>
-          <option name="timeStamp" value="190" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/child_b.c</url>
@@ -332,18 +321,44 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/child_b.c</url>
-          <line>223</line>
+          <line>230</line>
           <option name="timeStamp" value="193" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.c</url>
+          <line>409</line>
+          <option name="timeStamp" value="198" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.c</url>
+          <line>386</line>
+          <option name="timeStamp" value="199" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="194" />
+      <option name="time" value="201" />
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CMakeRunConfiguration">
+        <watch expression="societa" language="ObjectiveC" />
+        <watch expression="societa.individui[0]" language="ObjectiveC" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>societa.individui[0]</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>societa</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>semctl(sem_id, 0, GETVAL)</expression-string>
         <language-id>ObjectiveC</language-id>
@@ -381,11 +396,6 @@
       </expression>
       <expression>
         <expression-string>shdata</expression-string>
-        <language-id>ObjectiveC</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>shdata-&gt;children_a[index].alive</expression-string>
         <language-id>ObjectiveC</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -636,20 +646,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.c">
+    <entry file="file://$PROJECT_DIR$/src/child_b.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="398">
-          <caret line="307" selection-start-line="307" selection-end-line="307" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="469">
+          <caret line="121" selection-start-line="121" selection-end-line="121" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/child_b.c">
+    <entry file="file://$PROJECT_DIR$/src/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
+        <state relative-caret-position="308">
+          <caret line="438" column="22" lean-forward="true" selection-start-line="438" selection-start-column="22" selection-end-line="438" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

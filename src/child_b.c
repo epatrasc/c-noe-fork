@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     int foundMate = 0;
     while(!foundMate){
         int index = -1;
-        printf("B | PID: %d, Cerco patner...\n", getpid());
+    //  printf("B | PID: %d, Cerco patner...\n", getpid());
         if((index = searchPatner(my_info, shdata))>=0){
             printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
             
