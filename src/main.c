@@ -87,7 +87,7 @@ void init_societa(int init_pop);
 void add_to_societa(struct individuo);
 void del_societa ();
 
-//void alarm_handler(int sig);
+void alarm_handler(int sig);
 
 //costants
 const int MIN_CHAR = 65; // A
@@ -99,6 +99,8 @@ int shmid;
 key_t key = 1060;
 struct shared_data *shdata;
 struct popolazione societa;
+int trigger_birth_death = 0;
+int trigger_end_sim = 0;
 
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
@@ -187,15 +189,15 @@ int main(int argc, char *argv[]) {
         kill(societa.individui[i].pid, SIGUSR1);
     }
 
-    // struct sigaction sa, sa_old;
-    // sa.sa_handler = &Alarm_handler;
-    // sa.sa_flags = 0;
-    // if (sigaction(SIGALRM, &sa, &sa_old) == -1) {  //settaggi handler
-    //     perror("ERRORE SIGACTION");
-    //     exit(EXIT_FAILURE);
-    // }
-    // signal(SIGALRM, alarm_handler);
-
+    struct sigaction sa, sa_old;
+    sa.sa_handler = &alarm_handler;
+    sa.sa_flags = 0;
+    if (sigaction(SIGALRM, &sa, &sa_old) == -1) {  //settaggi handler
+        perror("ERRORE SIGACTION");
+        exit(EXIT_FAILURE);
+    }
+    signal(SIGALRM, alarm_handler);
+    alarm(1);
     int status;
     int a_death=0, b_death=0, e_death=0;
     while ((child_pid = wait(&status)) > 0) {
@@ -508,33 +510,38 @@ void del_societa () {
     societa.cur_idx = 0;
 }
 
-// void alarm_handler(int sig){
-//     extern char **argvarb;
-//     int i,status;
-//     pid_t Child;
-//     extern bool terminato;
-//     struct sembuf palla;
-//     extern pid_t pallaID;
-//     free(argvarb);
-    
-//     palla.sem_num=0;
-//     palla.sem_op=-1;    // tolgo la palla per la terminazione corretta di tutti i processi
-//     semop(pallaID,&palla,1);
-    
-//     signal(SIGTERM, SIG_IGN);
-    
-//     for(i=0; i<3; i++){         //deallocazione
-//         kill(Spid[i],SIGTERM);
-        
-//         while((Child = wait(&status)) !=-1); //aspetto la terminazione delle squadre e del fato
-            
-//     }
-    
-//     if(semctl(pallaID,0,IPC_RMID)==-1)      //rimuovo semaforo palla
-//         perror("errore rimozione del semaforo");
-    
-//     printf("________________________FINE PARTITA______________________\n\n");
-//     printf("   IL PUNTEGGIO FINALE E' :  SQUADRA A: %d   SQUADRA B: %d\n\n",Punt_A,Punt_B);
-//     terminato=TRUE;
-// }
+void alarm_handler(int sig){
+    printf("P| alarm_handler: signal%d\n", sig);
+    if(trigger_birth_death == BIRTH_DEATH){
+        trigger_birth_death=0;
+        struct individuo figlio = gen_individuo();
+        pid_t child_pid = fork();
+
+        /* Handle error create child*/
+        if (child_pid < 0) {
+            die(strerror(errno));
+        }
+
+        /* Perform actions specific to child */
+        if (child_pid == 0) {
+            run_child(figlio);
+            exit(EXIT_FAILURE);
+        }
+
+        printf("P | CHILD BORN: %d %c\n", child_pid, figlio.tipo);
+
+        /* Perform actions specific to parent */
+        figlio.pid = child_pid;
+        add_to_societa(figlio);
+        publish_shared_data(figlio);
+    }
+
+    if(trigger_end_sim == SIM_TIME){
+        printf("P| alarm_handler: trigger_end_sim\n");
+        exit(EXIT_SUCCESS);
+    }
+    trigger_birth_death++;
+    trigger_end_sim++;
+    alarm(1);
+}
 

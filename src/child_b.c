@@ -67,12 +67,12 @@ int contact_patner(int index, struct individuo my_info, int pida);
 int main(int argc, char *argv[]) {
     struct individuo my_info;
 
-    printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
+    // printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
     atexit(exit_handler);
     if (argc < 2) {
-        printf("B | I need name and genoma input from argv. \n");
+        // printf("B | I need name and genoma input from argv. \n");
         for (int i = 0; i < argc; i++) {
-            printf("B | arg[%d]: %s \n ", i, argv[i]);
+            // printf("B | arg[%d]: %s \n ", i, argv[i]);
         }
         exit(EXIT_FAILURE);
     }
@@ -81,9 +81,9 @@ int main(int argc, char *argv[]) {
     my_info.tipo = 'B';
     my_info.genoma = (unsigned long) strtol(argv[2], NULL, 10);
 
-    printf("B | pid: %d | my_info.nome: %s \n", getpid(), my_info.nome);
-    printf("B | pid: %d | my_info.tipo: %c \n", getpid(), my_info.tipo);
-    printf("B | pid: %d | my_info.genoma: %lu \n", getpid(), my_info.genoma);
+    // printf("B | pid: %d | my_info.nome: %s \n", getpid(), my_info.nome);
+    // printf("B | pid: %d | my_info.tipo: %c \n", getpid(), my_info.tipo);
+    // printf("B | pid: %d | my_info.genoma: %lu \n", getpid(), my_info.genoma);
 
     sem_shm_id = semget(getppid(), 1, IPC_CREAT | 0666);
     TEST_ERROR;
@@ -98,23 +98,22 @@ int main(int argc, char *argv[]) {
     char *pid_s = calloc(sizeof(char), 6);
     sprintf(pid_s, "%d", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
-    TEST_ERROR;
 
     // search patner
     int pid_a_winner;
     int foundMate = 0;
     while(!foundMate){
         int index = -1;
-    //  printf("B | PID: %d, Cerco patner...\n", getpid());
+    //  // printf("B | PID: %d, Cerco patner...\n", getpid());
         if((index = searchPatner(my_info, shdata))>=0){
-            printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
+            // printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
             
             int pida =  shdata->children_a[index].pid;
             if((foundMate = contact_patner(index, my_info, pida)) == 1){
-                printf("B | PID: %d, patner ha accettato: %d\n", getpid(), index);
+                // printf("B | PID: %d, patner ha accettato: %d\n", getpid(), index);
                 pid_a_winner = pida;
             }else{
-                printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), index);
+                // printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), index);
             }
         }
         usleep(50000);
@@ -122,7 +121,7 @@ int main(int argc, char *argv[]) {
 
     send_msg_to_gestore(pid_a_winner);
     TEST_ERROR;
-    printf(" ---> CHILD B END | pid: %d <---\n", getpid());
+    // printf(" ---> CHILD B END | pid: %d <---\n", getpid());
 
     free(pid_s);
     remove(pid_s);
@@ -130,7 +129,7 @@ int main(int argc, char *argv[]) {
 }
 
 void send_msg_to_gestore(int pid_a) {
-    printf("B | PID: %d, contacting parent..\n", getpid());
+    // printf("B | PID: %d, contacting parent..\n", getpid());
     // send info to gestore
     int key = getppid();
     int msgid = msgget(key, 0666 | IPC_CREAT);
@@ -158,7 +157,7 @@ void send_msg_to_gestore(int pid_a) {
             exit(EXIT_FAILURE);
         }
     }
-    printf("B | PID: %d, message to the parent sent.\n", getpid());
+    // printf("B | PID: %d, message to the parent sent.\n", getpid());
 }
 
 void open_shmemory() {
@@ -233,69 +232,69 @@ int contact_patner(int index, struct individuo my_info, int pida){
     
     // print semaphore status
     int sem_val = semctl(sem_id, 0, GETVAL);
-    printf("B | pid %d | sem_id: %d | sem_val: %d\n", getpid(), sem_id, sem_val);
+    // printf("B | pid %d | sem_id: %d | sem_val: %d\n", getpid(), sem_id, sem_val);
 
     // lock resource
     semop(sem_id, &sem_2_l, 1);
     TEST_ERROR;
-    printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
+    // printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
 
     // skip dead child
     if (!isAlive(index)) {
-        printf("B | pid: %d | shdata->children_a[%d] NOT alive \n", getpid(), index);
+        // printf("B | pid: %d | shdata->children_a[%d] NOT alive \n", getpid(), index);
         // lock resource
         semop(sem_id, &sem_2_u, 1);
         TEST_ERROR;
         return 0;
     }
-    printf("B |  pid: %d | shdata->children_a[%d] IS alive \n", getpid(), index);
+    // printf("B |  pid: %d | shdata->children_a[%d] IS alive \n", getpid(), index);
 
     semop(sem_shm_id, &sem_1_u, 1);
     child.pid = shdata->children_a[index].pid;
     child.genoma = shdata->children_a[index].genoma;
     child.alive = shdata->children_a[index].alive;
-    printf("B |  pid: %d | child->pid: %d \n", getpid(), child.pid);
-    printf("B |  pid: %d | child->genoma: %lu \n", getpid(), child.genoma);
-    printf("B |  pid: %d | child->alive: %d \n", getpid(), child.alive);
+    // printf("B |  pid: %d | child->pid: %d \n", getpid(), child.pid);
+    // printf("B |  pid: %d | child->genoma: %lu \n", getpid(), child.genoma);
+    // printf("B |  pid: %d | child->alive: %d \n", getpid(), child.alive);
     semop(sem_shm_id, &sem_1_u, 1);
 
-    printf("B2 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
+    // printf("B2 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
     
     // Write message to A
     sprintf(pida_s, "%d", child.pid);
-    printf("B | pid: %d, shdata->children_a[i]: %s\n", getpid(), pida_s);
+    // printf("B | pid: %d, shdata->children_a[i]: %s\n", getpid(), pida_s);
 
     int fifo_a = open(pida_s, O_WRONLY);
     if (fifo_a == -1) {
-        printf("B | pid: %d | %s:%d | error fifo_a returned: %d\n", getpid(), __FILE__, __LINE__, fifo_a);
+        // printf("B | pid: %d | %s:%d | error fifo_a returned: %d\n", getpid(), __FILE__, __LINE__, fifo_a);
         exit(EXIT_FAILURE);
     }
 
-    printf("B | PID: %d | writing to A: start\n", getpid());
+    // printf("B | PID: %d | writing to A: start\n", getpid());
     char *my_msg = calloc(sizeof(char), 1024);
     int str_len = sprintf(my_msg, "%d,%s,%lu", getpid(), my_info.nome, my_info.genoma);
     write(fifo_a, my_msg, str_len);
     free(my_msg);
     close(fifo_a);
-    printf("B | PID: %d | writing to A: end\n", getpid());
+    // printf("B | PID: %d | writing to A: end\n", getpid());
 
     // read answer
-    printf("B | PID: %d | reading response from A...\n", getpid());
+    // printf("B | PID: %d | reading response from A...\n", getpid());
     int BUF_SIZE = 1024;
     char *readbuf = calloc(sizeof(char), BUF_SIZE);
     int fifo_b = open(pid_s, O_RDONLY);
     ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
     close(fifo_b);
 
-    printf("B | num_bytes: %li\n", num_bytes);
-    printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pida_s, readbuf);
+    // printf("B | num_bytes: %li\n", num_bytes);
+    // printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pida_s, readbuf);
 
-    printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
+    // printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
 
     int foundMate = 0;
     if (strtol(readbuf, NULL, 10) == 1) {
         foundMate = 1;
-        printf("B | pid %d | foundMate \n", getpid());
+        // printf("B | pid %d | foundMate \n", getpid());
         setDead(index);
     }
 
@@ -323,7 +322,7 @@ void setDead(int index) {
 
 void exit_handler(void)
 {
-    printf("B | PID: %d | exit_handler \n", getpid());
+    // printf("B | PID: %d | exit_handler \n", getpid());
     // shmdt(shdata->children_a);
     // shmdt(shdata);
     //abort();

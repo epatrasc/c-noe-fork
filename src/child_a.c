@@ -54,17 +54,17 @@ bool isGood(unsigned long gen_a, unsigned long gen_b) {
 int main(int argc, char *argv[]) {
     struct individuo my_info;
 
-    printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
+    // printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
     if (argc < 3) {
-        printf("A | I need name and genoma input from argv. \n");
+        // printf("A | I need name and genoma input from argv. \n");
         for (int i = 0; i < argc; i++) {
-            printf("A | arg[%d]: %s \n ", i, argv[i]);
+            // printf("A | arg[%d]: %s \n ", i, argv[i]);
         }
         exit(EXIT_FAILURE);
     }
     //creat sem 
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
+    // printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
     semctl(sem_id, 0, SETVAL, 1);
     TEST_ERROR;
 
@@ -73,9 +73,9 @@ int main(int argc, char *argv[]) {
     my_info.tipo = 'A';
     my_info.genoma = (unsigned long) strtol(argv[2], NULL, 10);
 
-    printf("A | my_info.nome: %s \n", my_info.nome);
-    printf("A | my_info.tipo: %c \n", my_info.tipo);
-    printf("A | my_info.genoma: %lu \n", my_info.genoma);
+    // printf("A | my_info.nome: %s \n", my_info.nome);
+    // printf("A | my_info.tipo: %c \n", my_info.tipo);
+    // printf("A | my_info.genoma: %lu \n", my_info.genoma);
 
     //create fifo
     char *pid_s = calloc(sizeof(char), 6);
@@ -90,13 +90,11 @@ int main(int argc, char *argv[]) {
 
     bool continua = true;
     while (flg_continua <= 3 && continua) {
-        printf("A | waiting for type b request...\n");
-        TEST_ERROR;
-
+        // printf("A | waiting for type b request...\n");
         fifo_a = open(pid_s, O_RDONLY);
 
         if ((num_bytes = read(fifo_a, readbuf, BUF_SIZE))> 0) {
-                printf("A | recieved request: %s\n", readbuf);
+                // printf("A | recieved request: %s\n", readbuf);
                 close(fifo_a);
                 char *nome_b;
                 unsigned long genoma_b;
@@ -109,9 +107,9 @@ int main(int argc, char *argv[]) {
                 sprintf(nome_b, "%s", token);
                 genoma_b = (unsigned long) strtol(strsep(&readbuf, ","), NULL, 10);
 
-                printf("A | pid_b:%s\n", pid_b);
-                printf("A | nome_b:%s\n", nome_b);
-                printf("A | genoma_b:%lu\n", genoma_b);
+                // printf("A | pid_b:%s\n", pid_b);
+                // printf("A | nome_b:%s\n", nome_b);
+                // printf("A | genoma_b:%lu\n", genoma_b);
 
                 //evaluate candidate
                 int answer = (int) isGood(my_info.genoma, genoma_b);
@@ -122,7 +120,7 @@ int main(int argc, char *argv[]) {
                 }
 
 
-                printf("A | accept pid %s? %d\n", pid_b, answer);
+                // printf("A | accept pid %s? %d\n", pid_b, answer);
                 sleep(1);
                 // send response
                 int fifo_b = open(pid_b, O_WRONLY);
@@ -132,7 +130,7 @@ int main(int argc, char *argv[]) {
                 }
                 char *my_msg = calloc(sizeof(char), 2);
                 int str_len = sprintf(my_msg, "%d",answer);
-                printf("A | fifo_b: %d\n", fifo_b);
+                // printf("A | fifo_b: %d\n", fifo_b);
                 write(fifo_b, my_msg, str_len);
                 close(fifo_b);
         }else{
@@ -145,7 +143,7 @@ int main(int argc, char *argv[]) {
     free(readbuf);
     remove(pid_s);
 
-    printf("A | PID: %d, contacting parent...\n",getpid());
+    // printf("A | PID: %d, contacting parent...\n",getpid());
 
     // send info to gestore
     int key, mask, msgid;
@@ -167,7 +165,7 @@ int main(int argc, char *argv[]) {
     int ret, msg[2] = {getpid(), pid_b_int};
     ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
 
-    printf("A | PID: %d, Send message ...\n",getpid());
+    // printf("A | PID: %d, Send message ...\n",getpid());
 
     if (ret == -1) {
         if (errno != EAGAIN) {
@@ -185,8 +183,8 @@ int main(int argc, char *argv[]) {
     //semctl(sem_id, 0, IPC_RMID,0);
 
 
-    printf("A | PID: %d, Message sent \n",getpid());
-    printf(" ---> CHILD A END | pid: %d <---\n", getpid());
+    // printf("A | PID: %d, Message sent \n",getpid());
+    // printf(" ---> CHILD A END | pid: %d <---\n", getpid());
 
     exit(EXIT_SUCCESS);
 }
