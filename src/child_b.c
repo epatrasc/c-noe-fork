@@ -293,15 +293,14 @@ int contact_patner(int index, struct individuo my_info, int pida){
     printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
 
     int foundMate = 0;
-    if (strtol(readbuf, NULL, 10) != 1) {
+    if (strtol(readbuf, NULL, 10) == 1) {
         foundMate = 1;
+        printf("B | pid %d | foundMate \n", getpid());
+        setDead(index);
     }
 
-    printf("B | pid %d | foundMate \n", getpid());
-    setDead(index);
     free(pida_s);
     free(readbuf);
-    
     // Release the resource
     semop(sem_id, &sem_2_u, 1);
     TEST_ERROR;

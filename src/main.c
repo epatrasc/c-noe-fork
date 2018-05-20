@@ -64,15 +64,18 @@ struct stats {
     int cnt_total_pop;
 };
 
-unsigned long gen_genoma();
+unsigned long gen_genoma(unsigned long min,unsigned long max);
 char *gen_name(char *name);
 char gen_type();
 struct individuo gen_individuo();
+struct individuo gen_individuo_erede(struct individuo a, struct individuo b);
 void mate_and_fork(struct individuo a, struct individuo b);
 void run_parent(pid_t gestore_pid, pid_t pg_pid);
 void run_child(struct individuo figlio);
 unsigned int rand_interval(unsigned int min, unsigned int max);
+unsigned long rand_interval_lu(unsigned long min, unsigned long max);
 int len_of(int x);
+unsigned long mcd(unsigned long a, unsigned long b);
 static void wake_up_process(int signo);
 unsigned int compile_child_code(char type);
 void init_shmemory();
@@ -244,21 +247,16 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
 }
 
-unsigned long gen_genoma() {
-    return (unsigned long) lrand48();
+unsigned long gen_genoma(unsigned long min,unsigned long max) {
+    return rand_interval_lu(min, max);
 }
 
 char *gen_name(char *name) {
     int new_length = (int) (strlen(name) + 2);
     char *new_name = calloc(sizeof(char), new_length);
-    char *buffer = calloc(sizeof(char), 2);
 
-    sprintf(buffer, "%c", (char) rand_interval(MIN_CHAR, MAX_CHAR));
-    strcpy(new_name, name);
-    strcat(new_name, buffer);
-
-    free(buffer);
-
+    sprintf(new_name, "%s%c", name,(char) rand_interval(MIN_CHAR, MAX_CHAR));
+    printf("P | gen_name: %s\n", new_name);
     return new_name;
 }
 
@@ -271,10 +269,47 @@ struct individuo gen_individuo() {
 
     figlio.tipo = gen_type();
     figlio.nome = gen_name("");
-    figlio.genoma = gen_genoma();
+    figlio.genoma = gen_genoma(2, 2 + GENES);
     figlio.alive = true;
 
     return figlio;
+}
+
+struct individuo gen_individuo_erede(struct individuo a, struct individuo b){
+    struct individuo new_child;
+    unsigned long x = mcd(a.genoma,b.genoma);
+    int new_length = (int) (strlen(a.nome) + strlen(b.nome)  + 1);
+    char *new_name = calloc(sizeof(char), new_length);
+
+    sprintf(new_name,"%s%s", a.nome,b.nome);
+
+    new_child.tipo = gen_type();
+    new_child.nome = gen_name(new_name);
+    new_child.genoma = gen_genoma(x, x + GENES);
+    new_child.alive = true;
+
+
+    printf("P | gen_individuo_erede a.nome: %s\n", a.nome);
+    printf("P | gen_individuo_erede a.genoma: %lu\n", a.genoma);
+    printf("P | gen_individuo_erede b.nome: %s\n", b.nome);
+    printf("P | gen_individuo_erede b.genoma: %lu\n", b.genoma);
+    printf("P | gen_individuo_erede x: %lu\n", x);
+    printf("P | new_child.tipo: %c\n", new_child.tipo);
+    printf("P | new_child.nome: %s\n", new_child.nome);
+    printf("P | new_child.genoma: %lu\n", new_child.genoma);
+
+    return new_child;
+}
+
+unsigned long mcd(unsigned long a, unsigned long b) {
+    int remainder;
+    while (b != 0) {
+        remainder = a % b;
+
+        a = b;
+        b = remainder;
+    }
+    return a;
 }
 
 void run_parent(pid_t gestore_pid, pid_t pg_pid) {
@@ -363,6 +398,23 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     return min + (r / buckets);
 }
 
+unsigned long rand_interval_lu(unsigned long min, unsigned long max) {
+    // reference https://stackoverflow.com/a/17554531
+    unsigned long r;
+    const unsigned long range = 1 + max - min;
+    const unsigned long buckets = RAND_MAX / range;
+    const unsigned long limit = buckets * range;
+
+    /* Create equal size buckets all in a row, then fire randomly towards
+     * the buckets until you land in one of them. All buckets are equally
+     * likely. If you land off the end of the line of buckets, try again. */
+    do {
+        r = lrand48();
+    } while (r >= limit);
+
+    return min + (r / buckets);
+}
+
 unsigned int compile_child_code(char type) {
     char *file[] = {"gcc ./src/child_a.c -o ./exec/child_a.exe", "gcc ./src/child_b.c -o ./exec/child_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
@@ -407,7 +459,7 @@ void mate_and_fork(struct individuo a, struct individuo b){
     struct individuo new_born;
     pid_t child_pid;
     
-    new_born = gen_individuo();
+    new_born = gen_individuo_erede(a, b);
 
     child_pid = fork();
     if (child_pid < 0) {
