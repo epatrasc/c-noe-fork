@@ -61,7 +61,9 @@ struct shared_data {
 struct stats {
     int num_type_a;
     int num_type_b;
-    int cnt_total_pop;
+    int num_match;
+    int num_birth_death;
+    struct popolazione *societa;
 };
 
 unsigned long gen_genoma(unsigned long min,unsigned long max);
@@ -70,7 +72,6 @@ char gen_type();
 struct individuo gen_individuo();
 struct individuo gen_individuo_erede(struct individuo a, struct individuo b);
 void mate_and_fork(struct individuo a, struct individuo b);
-void run_parent(pid_t gestore_pid, pid_t pg_pid);
 void run_child(struct individuo figlio);
 unsigned int rand_interval(unsigned int min, unsigned int max);
 unsigned long rand_interval_lu(unsigned long min, unsigned long max);
@@ -80,14 +81,17 @@ static void wake_up_process(int signo);
 unsigned int compile_child_code(char type);
 void init_shmemory();
 void free_shmemory();
+void init_stats();
 void publish_shared_data(struct individuo figlio);
 char get_type_from_pid(pid_t pid, struct popolazione);
 struct individuo get_individuo_by_pid(int pid, struct popolazione);
 void init_societa(int init_pop);
 void add_to_societa(struct individuo);
 void del_societa ();
-
+void print_stats();
 void alarm_handler(int sig);
+struct individuo search_longest_name();
+struct individuo search_greater_genoma();
 
 //costants
 const int MIN_CHAR = 65; // A
@@ -99,6 +103,7 @@ int shmid;
 key_t key = 1060;
 struct shared_data *shdata;
 struct popolazione societa;
+struct stats statistics;
 int trigger_birth_death = 0;
 int trigger_end_sim = 0;
 
@@ -109,14 +114,6 @@ unsigned int BIRTH_DEATH = 5;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
 
 int main(int argc, char *argv[]) {
-    //init steps
-    srand48(time(NULL));
-    init_shmemory();
-    compile_child_code('A');
-    compile_child_code('B');
-
-    run_parent(getpid(), getppid());
-
     for (int i = 0; i < argc; i++) {
         printf("P | arg[%d]: %s \n", i, argv[i]);
     }
@@ -134,8 +131,15 @@ int main(int argc, char *argv[]) {
     INIT_PEOPLE = atoi(argv[1]);
     printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
 
+    //init steps
+    srand48(time(NULL));
+    compile_child_code('A');
+    compile_child_code('B');
+
     init_societa(INIT_PEOPLE);
-    
+    init_stats();
+    init_shmemory();
+
     //init population
     pid_t child_pid;
     for (int i = 0; i < INIT_PEOPLE; i++) {
@@ -312,10 +316,6 @@ unsigned long mcd(unsigned long a, unsigned long b) {
         b = remainder;
     }
     return a;
-}
-
-void run_parent(pid_t gestore_pid, pid_t pg_pid) {
-    printf("P |  PID=%d, PPID=%d\n", gestore_pid, pg_pid);
 }
 
 void run_child(struct individuo figlio) {
@@ -510,10 +510,29 @@ void del_societa () {
     societa.cur_idx = 0;
 }
 
+void init_stats(){
+    statistics.num_match = 0;
+    statistics.num_type_a = 0;
+    statistics.num_type_b = 0;
+    statistics.num_birth_death = 0;
+    statistics.societa = &societa;
+}
+
 void alarm_handler(int sig){
     printf("P| alarm_handler: signal%d\n", sig);
     if(trigger_birth_death == BIRTH_DEATH){
         trigger_birth_death=0;
+
+        // kill random child
+        pid_t pid;
+        int index,status;
+
+        index = rand_interval(0, societa.cur_idx);
+        pid = societa.individui[index].pid;
+        kill(societa.individui[index].pid, SIGTERM);
+        while(waitpid(pid, &status, 0) !=-1);
+
+        // generate new child
         struct individuo figlio = gen_individuo();
         pid_t child_pid = fork();
 
@@ -544,4 +563,38 @@ void alarm_handler(int sig){
     trigger_end_sim++;
     alarm(1);
 }
+struct individuo search_longest_name(){
+    int max_len = 0;
+    int index_max_len = 0;
+    for (int i = 0; i < societa.cur_idx; i++) {
+        if (strlen(societa.individui[i].nome) >  max_len) {
+            max_len = strlen(societa.individui[i].nome);
+            index_max_len = i;
+        }
+    }
+    return societa.individui[index_max_len];
+}
+struct individuo search_greater_genoma(){
+    int max_genoma = 0;
+    int index_max_genoma = 0;
+    for (int i = 0; i < societa.cur_idx; i++) {
+        if (societa.individui[i].genoma >  max_genoma) {
+            max_genoma = strlen(societa.individui[i].nome);
+            index_max_genoma = i;
+        }
+    }
+    return societa.individui[index_max_genoma];
+}
 
+void print_stats(){
+    struct individuo child_longest_name = search_longest_name();
+    struct individuo child_greater_genoma = search_greater_genoma();
+
+    printf("P| *** STATISTIC UPDATE ***\n");
+    printf("P| num_match: %d\n", statistics.num_match);
+    printf("P| num_type_a: %d\n", statistics.num_type_a);
+    printf("P| num_type_b: %d\n", statistics.num_type_b);
+    printf("P| num_birth_death: %d\n", statistics.num_birth_death);
+    printf("P| total population: %d\n", statistics.societa->cur_idx);
+    printf("P| *** STATISTIC END ***\n");
+}
