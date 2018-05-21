@@ -586,15 +586,17 @@ void alarm_handler(int sig) {
         int index, status;
 
         index = pick_random_process();
+        // TODO add semaphores
+        if (societa.individui[index].tipo == 'B') {
+            shdata->children_a[index].alive = 0;
+        }
+
         pid_t pid = societa.individui[index].pid;
         kill(pid, SIGTERM);
 
         while (waitpid(pid, &status, 0) != -1);
 
-        if (societa.individui[index].tipo == 'B') {
-            // TODO add semaphores
-            shdata->children_a[index].alive = 0;
-        }
+        
 
         // generate new child
         struct individuo figlio = gen_individuo();
@@ -622,7 +624,7 @@ void alarm_handler(int sig) {
         // TODO handle end simulation
         exit(EXIT_SUCCESS);
     }
-    
+
     trigger_birth_death++;
     trigger_end_sim++;
     alarm(1);

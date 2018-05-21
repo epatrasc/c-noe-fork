@@ -21,3 +21,6 @@
     + unlock semaphores
     + free memory
     + delete fifo
+
+## child_a
+- after x request make the selection less selective

@@ -15,12 +15,12 @@
 #include <sys/sem.h>
 
 #define TEST_ERROR    if (errno) {fprintf(stderr, \
-					   "%s:%d: PID=%5d: Error %d (%s)\n",\
-					   __FILE__,\
-					   __LINE__,\
-					   getpid(),\
-					   errno,\
-					   strerror(errno));}
+                       "%s:%d: PID=%5d: Error %d (%s)\n",\
+                       __FILE__,\
+                       __LINE__,\
+                       getpid(),\
+                       errno,\
+                       strerror(errno));}
 
 struct individuo {
     char tipo;
@@ -28,31 +28,26 @@ struct individuo {
     unsigned long genoma;
 };
 
-int mcd(unsigned long a, unsigned long b) {
-    int remainder;
-    while (b != 0) {
-        remainder = a % b;
+int mcd(unsigned long a, unsigned long b);
 
-        a = b;
-        b = remainder;
-    }
-    return a;
-}
+bool isGood(unsigned long gen_a, unsigned long gen_b);
 
-bool isGood(unsigned long gen_a, unsigned long gen_b) {
-    if (gen_a % gen_b == 0) {
-        return true;
-    }
+void handle_termination(int signum);
 
-    if (mcd(gen_a, gen_b) >= 5) {
-        return true;
-    }
+void send_msg_parent(pid_t pid_b);
 
-    return false;
-}
+// handle termination
+volatile sig_atomic_t done = 0;
+// Global variable
+int fifo_a = -1, selection_level = 5;
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
+    struct sigaction action;
+
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = handle_termination;
+    sigaction(SIGTERM, &action, NULL);
 
     // printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
     if (argc < 3) {
@@ -62,6 +57,7 @@ int main(int argc, char *argv[]) {
         }
         exit(EXIT_FAILURE);
     }
+
     //creat sem 
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     // printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
@@ -78,71 +74,106 @@ int main(int argc, char *argv[]) {
     // printf("A | my_info.genoma: %lu \n", my_info.genoma);
 
     //create fifo
-    char *pid_s = calloc(sizeof(char), 6);
+    char *pid_s = calloc(sizeof(char), sizeof(pid_t));
     sprintf(pid_s, "%d", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
-    int flg_continua = 1, BUF_SIZE = 1024;
+    int BUF_SIZE = 1024;
     ssize_t num_bytes;
     char *readbuf = calloc(sizeof(char), BUF_SIZE);
-    int fifo_a;
-    char *pid_b = calloc(sizeof(char), 6);
+    char *pid_b = calloc(sizeof(char), sizeof(pid_t));
 
-    bool continua = true;
-    while (flg_continua <= 3 && continua) {
+    while (done) {
         // printf("A | waiting for type b request...\n");
-        fifo_a = open(pid_s, O_RDONLY);
-
-        if ((num_bytes = read(fifo_a, readbuf, BUF_SIZE))> 0) {
-                // printf("A | recieved request: %s\n", readbuf);
-                close(fifo_a);
-                char *nome_b;
-                unsigned long genoma_b;
-                char *token;
-
-                token = strsep(&readbuf, ",");
-                sprintf(pid_b, "%s", token);
-                token = strsep(&readbuf, ",");
-                nome_b = calloc(sizeof(char), strlen(token));
-                sprintf(nome_b, "%s", token);
-                genoma_b = (unsigned long) strtol(strsep(&readbuf, ","), NULL, 10);
-
-                // printf("A | pid_b:%s\n", pid_b);
-                // printf("A | nome_b:%s\n", nome_b);
-                // printf("A | genoma_b:%lu\n", genoma_b);
-
-                //evaluate candidate
-                int answer = (int) isGood(my_info.genoma, genoma_b);
-                if (answer || flg_continua==2) {
-                    //TODO dangerous can end in loop
-                    continua = false;
-                    answer=1;
-                }
-
-
-                // printf("A | accept pid %s? %d\n", pid_b, answer);
-                sleep(1);
-                // send response
-                int fifo_b = open(pid_b, O_WRONLY);
-                if(fifo_a < 0){
-                    sleep(1);
-                    fifo_b = open(pid_b, O_WRONLY);
-                }
-                char *my_msg = calloc(sizeof(char), 2);
-                int str_len = sprintf(my_msg, "%d",answer);
-                // printf("A | fifo_b: %d\n", fifo_b);
-                write(fifo_b, my_msg, str_len);
-                close(fifo_b);
-        }else{
-            close(fifo_a);
+        if ((fifo_a = open(pid_s, O_RDONLY | O_NONBLOCK)) < 0) {
+            usleep(10000);
+            continue;
         }
-        
-        flg_continua ++;
+
+        if ((num_bytes = read(fifo_a, readbuf, BUF_SIZE)) <= 0) {
+            close(fifo_a);
+            continue;
+        }
+
+        close(fifo_a);
+
+        // printf("A | recieved request: %s\n", readbuf);
+        char *nome_b, *token;
+        unsigned long genoma_b;
+
+        token = strsep(&readbuf, ",");
+        sprintf(pid_b, "%s", token);
+        token = strsep(&readbuf, ",");
+        nome_b = calloc(sizeof(char), strlen(token));
+        sprintf(nome_b, "%s", token);
+        genoma_b = (unsigned long) strtol(strsep(&readbuf, ","), NULL, 10);
+
+        // printf("A | pid_b:%s\n", pid_b);
+        // printf("A | nome_b:%s\n", nome_b);
+        // printf("A | genoma_b:%lu\n", genoma_b);
+
+        //evaluate candidate
+        int answer = (int) isGood(my_info.genoma, genoma_b);
+
+        // printf("A | accept pid %s? %d\n", pid_b, answer);
+        // send response
+        int fifo_b = open(pid_b, O_WRONLY);
+        char *my_msg = calloc(sizeof(char), 2);
+        int str_len = sprintf(my_msg, "%d", answer);
+
+        // printf("A | fifo_b: %d\n", fifo_b);
+        write(fifo_b, my_msg, str_len);
+        close(fifo_b);
+
+        // if positive inform parent
+        if (answer) {
+            send_msg_parent((int) strtol(pid_b, (char **) NULL, 10));
+        }
     }
 
-    free(readbuf);
     remove(pid_s);
+    free(readbuf);
+    free(pid_b);
+    free(pid_s);
 
+    semctl(sem_id, 0, IPC_RMID, 0);
+
+
+// printf("A | PID: %d, Message sent \n",getpid());
+// printf(" ---> CHILD A END | pid: %d <---\n", getpid());
+
+    exit(EXIT_SUCCESS);
+}
+
+int mcd(unsigned long a, unsigned long b) {
+    int remainder;
+    while (b != 0) {
+        remainder = a % b;
+
+        a = b;
+        b = remainder;
+    }
+    return a;
+}
+
+bool isGood(unsigned long gen_a, unsigned long gen_b) {
+    extern int selection_level;
+
+    if (gen_a % gen_b == 0) return true;
+    if (mcd(gen_a, gen_b) >= selection_level) return true;
+    
+    selection_level--;
+
+    return false;
+}
+
+void handle_termination(int signum) {
+    printf("A | pid: %d | SIGTERM recevived\n", getpid());
+
+    done = 1;
+}
+
+void send_msg_parent(int pid_b) {
     // printf("A | PID: %d, contacting parent...\n",getpid());
 
     // send info to gestore
@@ -160,31 +191,20 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Send messages ...
-    int pid_b_int = (int) strtol(pid_b, (char **) NULL, 10);
-    int ret, msg[2] = {getpid(), pid_b_int};
+    // Send message to the parent ...
+    int ret, msg[2] = {getpid(), pid_b};
     ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
 
     // printf("A | PID: %d, Send message ...\n",getpid());
 
     if (ret == -1) {
         if (errno != EAGAIN) {
-            fprintf(stderr, "A |Message could not be sended.\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "A |Message could not be sended. Retry...\n");
         }
         usleep(50000);//50 ms
         //try again
         if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
             fprintf(stderr, "A | Message could not be sended.\n");
-            exit(EXIT_FAILURE);
         }
     }
-
-    //semctl(sem_id, 0, IPC_RMID,0);
-
-
-    // printf("A | PID: %d, Message sent \n",getpid());
-    // printf(" ---> CHILD A END | pid: %d <---\n", getpid());
-
-    exit(EXIT_SUCCESS);
 }

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
 
     // create fifo
-    char *pid_s = calloc(sizeof(char), 6);
+    char *pid_s = calloc(sizeof(char), sizeof(pid_t));
     sprintf(pid_s, "%d", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
@@ -120,7 +120,6 @@ int main(int argc, char *argv[]) {
     }
 
     send_msg_to_gestore(pid_a_winner);
-    TEST_ERROR;
     // printf(" ---> CHILD B END | pid: %d <---\n", getpid());
 
     free(pid_s);
@@ -223,8 +222,8 @@ int searchPatner(struct individuo my_info, struct shared_data *shdata){
 
 int contact_patner(int index, struct individuo my_info, int pida){
     struct child_a child;
-    char *pida_s = calloc(sizeof(char), 6);
-    char *pid_s = calloc(sizeof(char), 6);
+    char *pida_s = calloc(sizeof(char), sizeof(pid_t));
+    char *pid_s = calloc(sizeof(char), sizeof(pid_t));
     sprintf(pid_s, "%d", getpid());
 
     // access to the child semaphore
