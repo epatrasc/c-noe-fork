@@ -61,7 +61,6 @@ struct shared_data {
 struct stats {
     int num_type_a;
     int num_type_b;
-    int num_match;
     int num_birth_death;
     struct popolazione *societa;
 };
@@ -100,8 +99,6 @@ void init_stats();
 
 void publish_shared_data(struct individuo figlio);
 
-char get_type_from_pid(pid_t pid, struct popolazione);
-
 struct individuo get_individuo_by_pid(int pid, struct popolazione);
 
 int get_index_by_pid(int pid, struct popolazione societa);
@@ -133,13 +130,15 @@ const int SHMFLG = IPC_CREAT | 0666;
 volatile sig_atomic_t end_simulation = 0;
 
 // Global variables
-int shmid;
+int shmid, sem_id;
 key_t key = 1060;
 struct shared_data *shdata;
 struct popolazione societa;
 struct stats statistics;
 int trigger_birth_death = 0;
 int trigger_end_sim = 0;
+struct sembuf sem_1_l = {0, -1, 0};
+struct sembuf sem_1_u = {0, 1, 0};
 
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
@@ -213,7 +212,7 @@ int main(int argc, char *argv[]) {
     }
 
     //creat sem to sync shared memory
-    pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
+    sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
     TEST_ERROR;
@@ -237,17 +236,24 @@ int main(int argc, char *argv[]) {
     signal(SIGALRM, alarm_handler);
     alarm(1);
 
+    // main loop
     int status, a_death = 0, b_death = 0, e_death = 0;
-    while ((child_pid = wait(&status)) > 0) {
+    while ((child_pid = wait(&status)) > 0 || !end_simulation) {
+        if(child_pid<=0){
+             printf("P | while loop");
+            usleep(50000);
+            continue;
+        }
         printf("P | Ended child : %d | status: %d \n", child_pid, status);
 
-        char type = get_type_from_pid(child_pid, societa);
-        type == 'A' ? a_death++ : b_death++;
-        printf("P | TYPE STAT | A: %d, B: %d, E: %d\n", a_death, b_death, e_death);
+        // update statistics
+        struct individuo child = get_individuo_by_pid(child_pid, societa);
+        if(child.tipo == 'A') statistics.num_type_a++;
+        if(child.tipo == 'B') statistics.num_type_b++;
 
         // update alive
         int index = get_index_by_pid(child_pid, societa);
-
+    
         if (index > -1) societa.individui[index].alive = 0;
         if (status != 0) continue;
 
@@ -471,16 +477,6 @@ int len_of(int value) {
     return l;
 }
 
-char get_type_from_pid(pid_t pid, struct popolazione societa) {
-    for (int i = 0; i < societa.cur_idx; i++) {
-        if (societa.individui[i].pid == pid) {
-            return societa.individui[i].tipo;
-        }
-    }
-
-    return ' ';
-}
-
 int get_index_by_pid(int pid, struct popolazione societa) {
     for (int i = 0; i < societa.cur_idx; i++) {
         if (societa.individui[i].pid == pid) {
@@ -556,7 +552,6 @@ void del_societa() {
 }
 
 void init_stats() {
-    statistics.num_match = 0;
     statistics.num_type_a = 0;
     statistics.num_type_b = 0;
     statistics.num_birth_death = 0;
@@ -582,7 +577,7 @@ int pick_random_process() {
 }
 
 void alarm_handler(int sig) {
-    printf("P| alarm_handler: signal%d\n", sig);
+    printf("P | alarm_handler: signal%d\n", sig);
     if (trigger_birth_death == BIRTH_DEATH) {
         trigger_birth_death = 0;
 
@@ -592,13 +587,17 @@ void alarm_handler(int sig) {
         index = pick_random_process();
         // TODO add semaphores
         if (societa.individui[index].tipo == 'B') {
+            semop(sem_id, &sem_1_l, 1);
             shdata->children_a[index].alive = 0;
+            semop(sem_id, &sem_1_u, 1);
         }
 
         pid_t pid = societa.individui[index].pid;
         kill(pid, SIGTERM);
 
-        while (waitpid(pid, &status, 0) != -1);
+        while (waitpid(pid, &status, 0) > 0){
+            // TODO stats
+        };
 
         
 
@@ -622,15 +621,19 @@ void alarm_handler(int sig) {
         add_to_societa(figlio);
         publish_shared_data(figlio);
 
+        statistics.num_birth_death++;
+
         // print stats
         print_stats();
     }
 
     if (trigger_end_sim == SIM_TIME) {
-        printf("P| alarm_handler: trigger_end_sim\n");
+        printf("P | alarm_handler: trigger_end_sim\n");
         for(int i=0; i<societa.cur_idx;i++){
             kill(societa.individui[i].pid, SIGTERM);
         }
+        print_stats();
+        end_simulation = 1;
     }
 
     trigger_birth_death++;
@@ -667,11 +670,12 @@ void print_stats() {
     struct individuo child_longest_name = search_longest_name();
     struct individuo child_greater_genoma = search_greater_genoma();
 
-    printf("P| *** STATISTIC UPDATE ***\n");
-    printf("P| num_match: %d\n", statistics.num_match);
-    printf("P| num_type_a: %d\n", statistics.num_type_a);
-    printf("P| num_type_b: %d\n", statistics.num_type_b);
-    printf("P| num_birth_death: %d\n", statistics.num_birth_death);
-    printf("P| total population: %d\n", statistics.societa->cur_idx);
-    printf("P| *** STATISTIC END ***\n");
+    printf("P | *** STATISTIC UPDATE ***\n");
+    printf("P | num_type_a: %d\n", statistics.num_type_a);
+    printf("P | num_type_b: %d\n", statistics.num_type_b);
+    printf("P | num_birth_death: %d\n", statistics.num_birth_death);
+    printf("P | child_longest_name: %s\n", child_longest_name.nome);
+    printf("P | child_greater_genoma: %li\n", child_greater_genoma.genoma);
+    printf("P | total population: %d\n", statistics.societa->cur_idx);
+    printf("P | *** STATISTIC END ***\n");
 }
