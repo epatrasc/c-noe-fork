@@ -32,14 +32,15 @@ int mcd(unsigned long a, unsigned long b);
 
 bool isGood(unsigned long gen_a, unsigned long gen_b);
 
+void send_msg_parent(pid_t pid_b);
+
 void handle_termination(int signum);
 
-void send_msg_parent(pid_t pid_b);
+// Global variable
+int fifo_a = -1, selection_level = 5;
 
 // handle termination
 volatile sig_atomic_t done = 0;
-// Global variable
-int fifo_a = -1, selection_level = 5;
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
@@ -60,7 +61,7 @@ int main(int argc, char *argv[]) {
 
     //creat sem 
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    // printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
+    // printf("A | pid %d | sem_a_id: %d\n", getpid(),sem_a_id);
     semctl(sem_id, 0, SETVAL, 1);
     TEST_ERROR;
 

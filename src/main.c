@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
     //creat sem to sync shared memory
     pid_t sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    printf("P | pid %d | sem_id: %d\n", getpid(), sem_id);
+    printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
     TEST_ERROR;
 
@@ -357,7 +357,7 @@ void run_child(struct individuo figlio) {
 
     // run execve
     // argv[0] = program name
-    argv[0] = "NOME PROGRAMMA"; //TODO
+    argv[0] = "c_noe_fork_child.exe"; //TODO
 
     // argv[1] = child name
     argv[1] = calloc(strlen(figlio.nome) + 1, sizeof(char));

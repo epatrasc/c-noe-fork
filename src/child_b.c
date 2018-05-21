@@ -42,18 +42,6 @@ struct shared_data {
     struct child_a children_a[];
 };
 
-
-const int SHMFLG = IPC_CREAT | 0666;
-
-struct sembuf sem_1_l = {0, -1, 0};
-struct sembuf sem_1_u = {0, 1, 0};
-struct sembuf sem_2_l = {0, -1, 0};
-struct sembuf sem_2_u = {0, 1, 0};
-
-unsigned int shmid;
-struct shared_data *shdata;
-pid_t sem_shm_id;
-
 int mcd(unsigned long a, unsigned long b);
 bool isForMe(unsigned long gen_a, unsigned long gen_b);
 int searchPatner(struct individuo my_info, struct shared_data *shdata);
@@ -63,12 +51,33 @@ void setDead(int index);
 void send_msg_to_gestore(int pid_a);
 void exit_handler(void);
 int contact_patner(int index, struct individuo my_info, int pida);
+void handle_termination(int signum);
+
+
+// Global variable
+const int SHMFLG = IPC_CREAT | 0666;
+struct sembuf sem_1_l = {0, -1, 0};
+struct sembuf sem_1_u = {0, 1, 0};
+struct sembuf sem_2_l = {0, -1, 0};
+struct sembuf sem_2_u = {0, 1, 0};
+
+unsigned int shmid;
+struct shared_data *shdata;
+int sem_shm_id, sem_a_id;
+
+// handle termination
+volatile sig_atomic_t done = 0;
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
+    struct sigaction action;
 
-    // printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
     atexit(exit_handler);
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = handle_termination;
+    sigaction(SIGTERM, &action, NULL);
+    
+    // printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
     if (argc < 2) {
         // printf("B | I need name and genoma input from argv. \n");
         for (int i = 0; i < argc; i++) {
@@ -100,30 +109,27 @@ int main(int argc, char *argv[]) {
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
     // search patner
-    int pid_a_winner;
     int foundMate = 0;
-    while(!foundMate){
+    while(!foundMate && !done){
         int index = -1;
-    //  // printf("B | PID: %d, Cerco patner...\n", getpid());
+        // printf("B | PID: %d, Cerco patner...\n", getpid());
         if((index = searchPatner(my_info, shdata))>=0){
             // printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
             
             int pida =  shdata->children_a[index].pid;
             if((foundMate = contact_patner(index, my_info, pida)) == 1){
                 // printf("B | PID: %d, patner ha accettato: %d\n", getpid(), index);
-                pid_a_winner = pida;
+                send_msg_to_gestore(pida);
             }else{
                 // printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), index);
             }
         }
         usleep(50000);
     }
-
-    send_msg_to_gestore(pid_a_winner);
     // printf(" ---> CHILD B END | pid: %d <---\n", getpid());
 
-    free(pid_s);
     remove(pid_s);
+    free(pid_s);
     exit(EXIT_SUCCESS);
 }
 
@@ -227,37 +233,33 @@ int contact_patner(int index, struct individuo my_info, int pida){
     sprintf(pid_s, "%d", getpid());
 
     // access to the child semaphore
-    pid_t sem_id = semget(pida, 1, IPC_CREAT | 0666);
+    sem_a_id = semget(pida, 1, IPC_CREAT | 0666);
     
     // print semaphore status
-    int sem_val = semctl(sem_id, 0, GETVAL);
-    // printf("B | pid %d | sem_id: %d | sem_val: %d\n", getpid(), sem_id, sem_val);
+    int sem_val = semctl(sem_a_id, 0, GETVAL);
+    // printf("B | pid %d | sem_a_id: %d | sem_val: %d\n", getpid(), sem_a_id, sem_val);
 
     // lock resource
-    semop(sem_id, &sem_2_l, 1);
+    semop(sem_a_id, &sem_2_l, 1);
     TEST_ERROR;
-    // printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
+    // printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_a_id);
 
     // skip dead child
     if (!isAlive(index)) {
         // printf("B | pid: %d | shdata->children_a[%d] NOT alive \n", getpid(), index);
         // lock resource
-        semop(sem_id, &sem_2_u, 1);
+        semop(sem_a_id, &sem_2_u, 1);
         TEST_ERROR;
         return 0;
     }
     // printf("B |  pid: %d | shdata->children_a[%d] IS alive \n", getpid(), index);
 
-    semop(sem_shm_id, &sem_1_u, 1);
     child.pid = shdata->children_a[index].pid;
     child.genoma = shdata->children_a[index].genoma;
     child.alive = shdata->children_a[index].alive;
     // printf("B |  pid: %d | child->pid: %d \n", getpid(), child.pid);
     // printf("B |  pid: %d | child->genoma: %lu \n", getpid(), child.genoma);
     // printf("B |  pid: %d | child->alive: %d \n", getpid(), child.alive);
-    semop(sem_shm_id, &sem_1_u, 1);
-
-    // printf("B2 | pid %d | took control of %d semaphore\n", getpid(), sem_id);
     
     // Write message to A
     sprintf(pida_s, "%d", child.pid);
@@ -300,7 +302,7 @@ int contact_patner(int index, struct individuo my_info, int pida){
     free(pida_s);
     free(readbuf);
     // Release the resource
-    semop(sem_id, &sem_2_u, 1);
+    semop(sem_a_id, &sem_2_u, 1);
     TEST_ERROR;
 
     return foundMate;
@@ -322,7 +324,13 @@ void setDead(int index) {
 void exit_handler(void)
 {
     // printf("B | PID: %d | exit_handler \n", getpid());
-    // shmdt(shdata->children_a);
-    // shmdt(shdata);
+    semop(sem_shm_id, &sem_1_u, 1);
+    semop(sem_a_id, &sem_2_u, 1);
     //abort();
+}
+
+void handle_termination(int signum) {
+    extern int sem_shm_id, sem_a_id;
+    printf("B | pid: %d | SIGTERM recevived\n", getpid());
+    done = 1;
 }
