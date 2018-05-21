@@ -119,7 +119,7 @@ void alarm_handler(int sig);
 
 struct individuo search_longest_name();
 
-struct individuo search_greater_genoma();
+struct individuo search_highest_genoma();
 
 //costants
 const int MIN_CHAR = 65; // A
@@ -253,16 +253,16 @@ int main(int argc, char *argv[]) {
 
         // update alive
         int index = get_index_by_pid(child_pid, societa);
-    
         if (index > -1) societa.individui[index].alive = 0;
-        if (status != 0) continue;
 
         // handle queue msg
-        int *rcv = read_queue();
-        if (rcv[0] > -1 && !end_simulation) {
+        int *rcv;
+        rcv = read_queue();
+        while(rcv[0] !=-1 && !end_simulation){
             struct individuo a = get_individuo_by_pid(rcv[0], societa);
             struct individuo b = get_individuo_by_pid(rcv[1], societa);
             mate_and_fork(a, b);
+            rcv = read_queue();
         }
     }
 
@@ -280,11 +280,8 @@ int * read_queue() {
 
     if (msgrcv(msgid, &received, sizeof(int), 0, IPC_NOWAIT) == -1) {
         if (errno != ENOMSG) {
-            fprintf(stderr, "P | Message could not be received.\n");
-        }
-        usleep(50000);
-        if (msgrcv(msgid, &received, sizeof(int), 0, 0) == -1) {
-            fprintf(stderr, "P | Message could not be received.\n");
+            fprintf(stderr, "P | No messagges...\n");
+            return received;
         }
     }
 
@@ -654,7 +651,7 @@ struct individuo search_longest_name() {
     return societa.individui[index_max_len];
 }
 
-struct individuo search_greater_genoma() {
+struct individuo search_highest_genoma() {
     int max_genoma = 0;
     int index_max_genoma = 0;
     for (int i = 0; i < societa.cur_idx; i++) {
@@ -668,14 +665,14 @@ struct individuo search_greater_genoma() {
 
 void print_stats() {
     struct individuo child_longest_name = search_longest_name();
-    struct individuo child_greater_genoma = search_greater_genoma();
+    struct individuo child_highest_genoma = search_highest_genoma();
 
     printf("P | *** STATISTIC UPDATE ***\n");
     printf("P | num_type_a: %d\n", statistics.num_type_a);
     printf("P | num_type_b: %d\n", statistics.num_type_b);
     printf("P | num_birth_death: %d\n", statistics.num_birth_death);
     printf("P | child_longest_name: %s\n", child_longest_name.nome);
-    printf("P | child_greater_genoma: %li\n", child_greater_genoma.genoma);
+    printf("P | child_highest_genoma: %li\n", child_highest_genoma.genoma);
     printf("P | total population: %d\n", statistics.societa->cur_idx);
     printf("P | *** STATISTIC END ***\n");
 }
