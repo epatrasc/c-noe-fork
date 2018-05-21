@@ -13,7 +13,8 @@
         - use semaphores
 - free memory societa
 - handle END SIM
-    - ...
+    - kill every process by SIGTERM: OK
+    - delete shm semaphore: OK
 
 ## child_a / child_b
 

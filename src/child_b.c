@@ -130,6 +130,7 @@ int main(int argc, char *argv[]) {
 
     remove(pid_s);
     free(pid_s);
+    shmdt(shdata);
     exit(EXIT_SUCCESS);
 }
 

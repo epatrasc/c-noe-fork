@@ -116,7 +116,7 @@ void print_stats();
 
 int pick_random_process();
 
-void read_queue(int *rcv);
+int * read_queue();
 
 void alarm_handler(int sig);
 
@@ -128,6 +128,9 @@ struct individuo search_greater_genoma();
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
 const int SHMFLG = IPC_CREAT | 0666;
+
+// handle termination
+volatile sig_atomic_t end_simulation = 0;
 
 // Global variables
 int shmid;
@@ -249,9 +252,8 @@ int main(int argc, char *argv[]) {
         if (status != 0) continue;
 
         // handle queue msg
-        int *rcv;
-        read_queue(rcv);
-        if (rcv[0] > -1 && rcv[1] > -1) {
+        int *rcv = read_queue();
+        if (rcv[0] > -1 && !end_simulation) {
             struct individuo a = get_individuo_by_pid(rcv[0], societa);
             struct individuo b = get_individuo_by_pid(rcv[1], societa);
             mate_and_fork(a, b);
@@ -265,22 +267,24 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
 }
 
-void read_queue(int *rcv) {
+int * read_queue() {
     int msgid;
-
+    static int received[] = {-1,-1};
     msgid = msgget(getpid(), 0666);
 
-    if (msgrcv(msgid, &rcv, sizeof(int), 0, IPC_NOWAIT) == -1) {
+    if (msgrcv(msgid, &received, sizeof(int), 0, IPC_NOWAIT) == -1) {
         if (errno != ENOMSG) {
             fprintf(stderr, "P | Message could not be received.\n");
         }
         usleep(50000);
-        if (msgrcv(msgid, &rcv, sizeof(int), 0, 0) == -1) {
+        if (msgrcv(msgid, &received, sizeof(int), 0, 0) == -1) {
             fprintf(stderr, "P | Message could not be received.\n");
         }
     }
 
-    printf("P | QUEUE MSG[0]:%d | QUEUE MSG[1]:%d\n", rcv[0], rcv[1]);
+    printf("P | QUEUE MSG[0]:%d | QUEUE MSG[1]:%d\n", received[0], received[1]);
+
+    return received;
 }
 
 unsigned long gen_genoma(unsigned long min, unsigned long max) {
@@ -617,17 +621,22 @@ void alarm_handler(int sig) {
         figlio.pid = child_pid;
         add_to_societa(figlio);
         publish_shared_data(figlio);
+
+        // print stats
+        print_stats();
     }
 
     if (trigger_end_sim == SIM_TIME) {
         printf("P| alarm_handler: trigger_end_sim\n");
-        // TODO handle end simulation
-        exit(EXIT_SUCCESS);
+        for(int i=0; i<societa.cur_idx;i++){
+            kill(societa.individui[i].pid, SIGTERM);
+        }
     }
 
     trigger_birth_death++;
     trigger_end_sim++;
-    alarm(1);
+
+    if(!end_simulation) alarm(1);
 }
 
 struct individuo search_longest_name() {
