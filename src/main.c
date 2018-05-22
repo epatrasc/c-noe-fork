@@ -113,7 +113,7 @@ void print_stats();
 
 int pick_random_process();
 
-int * read_queue();
+int *read_queue();
 
 void alarm_handler(int sig);
 
@@ -215,7 +215,6 @@ int main(int argc, char *argv[]) {
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
-    TEST_ERROR;
 
     // make sure child set the signal handler
     sleep(1);
@@ -237,19 +236,18 @@ int main(int argc, char *argv[]) {
     alarm(1);
 
     // main loop
-    int status, a_death = 0, b_death = 0, e_death = 0;
-    while ((child_pid = wait(&status)) > 0 || !end_simulation) {
-        if(child_pid<=0){
-             printf("P | while loop");
+    int wstatus;
+    while ((child_pid = wait(&wstatus)) > 0 || !end_simulation) {
+        if (child_pid <= 0) {
             usleep(50000);
             continue;
         }
-        printf("P | Ended child : %d | status: %d \n", child_pid, status);
+        printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
 
         // update statistics
         struct individuo child = get_individuo_by_pid(child_pid, societa);
-        if(child.tipo == 'A') statistics.num_type_a++;
-        if(child.tipo == 'B') statistics.num_type_b++;
+        if (child.tipo == 'A') statistics.num_type_a++;
+        if (child.tipo == 'B') statistics.num_type_b++;
 
         // update alive
         int index = get_index_by_pid(child_pid, societa);
@@ -258,7 +256,7 @@ int main(int argc, char *argv[]) {
         // handle queue msg
         int *rcv;
         rcv = read_queue();
-        while(rcv[0] !=-1 && !end_simulation){
+        while (rcv[0] != -1 && !end_simulation) {
             struct individuo a = get_individuo_by_pid(rcv[0], societa);
             struct individuo b = get_individuo_by_pid(rcv[1], societa);
             mate_and_fork(a, b);
@@ -273,9 +271,9 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
 }
 
-int * read_queue() {
+int *read_queue() {
     int msgid;
-    static int received[] = {-1,-1};
+    static int received[] = {-1, -1};
     msgid = msgget(getpid(), 0666);
 
     if (msgrcv(msgid, &received, sizeof(int), 0, IPC_NOWAIT) == -1) {
@@ -357,7 +355,6 @@ unsigned long mcd(unsigned long a, unsigned long b) {
 
 void run_child(struct individuo figlio) {
     int error = 0;
-    char *buffer;
     char *argv[] = {NULL, NULL, NULL, NULL};
 
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
@@ -371,19 +368,14 @@ void run_child(struct individuo figlio) {
     strcat(argv[1], figlio.nome);
 
     // argv[2] = child genoma
-    buffer = calloc(len_of(figlio.genoma), sizeof(char));
     argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
-    sprintf(buffer, "%lu", figlio.genoma);
-    strcat(argv[2], buffer);
-    free(buffer);
+    sprintf(argv[2], "%lu", figlio.genoma);
 
     error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
 
     // if here i'm in error
     if (error < 0) {
-        free(argv[0]);
-        free(argv[1]);
-        die("Errore execve child");
+        die("P | Errore execve child");
     }
 }
 
@@ -521,7 +513,7 @@ void mate_and_fork(struct individuo a, struct individuo b) {
 }
 
 void init_societa(int init_pop) {
-    size_t size = init_pop * sizeof(struct individuo);
+    size_t size = init_pop + 50 * sizeof(struct individuo);
     societa.individui = malloc(size);
     if (societa.individui == NULL) {
         free(societa.individui);
@@ -537,7 +529,8 @@ void add_to_societa(struct individuo child) {
         societa.individui = realloc(societa.individui, new_size);
         societa.size = new_size;
     }
-    societa.individui[societa.cur_idx++] = child;
+    societa.individui[societa.cur_idx] = child;
+    societa.cur_idx++;
 }
 
 void del_societa() {
@@ -557,7 +550,7 @@ void init_stats() {
 
 int pick_random_process() {
     int pids_index[societa.cur_idx];
-    int num_alive = 0;
+    unsigned int num_alive = 0;
 
     //filter alive
     for (int i = 0; i < societa.cur_idx; i++) {
@@ -567,36 +560,50 @@ int pick_random_process() {
         }
     }
 
+    if (num_alive == 0) return -1;
+    if (num_alive == 1) return pids_index[0];
+
     // pick one of them
-    int index = rand_interval(0, num_alive);
+    int index = rand_interval(0, num_alive - 1);
 
     return pids_index[index];
 }
 
 void alarm_handler(int sig) {
     printf("P | alarm_handler: signal%d\n", sig);
+    if (!end_simulation) alarm(1);
+
+    if (trigger_end_sim == SIM_TIME) {
+        printf("P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim\n");
+        for (int i = 0; i < societa.cur_idx; i++) {
+            kill(societa.individui[i].pid, SIGTERM);
+        }
+        print_stats();
+        end_simulation = 1;
+    }
+
     if (trigger_birth_death == BIRTH_DEATH) {
         trigger_birth_death = 0;
 
         // kill random child
-        int index, status;
-
-        index = pick_random_process();
-        // TODO add semaphores
-        if (societa.individui[index].tipo == 'B') {
+        int index = pick_random_process();
+        if(index>=0){
+            int status;
             semop(sem_id, &sem_1_l, 1);
-            shdata->children_a[index].alive = 0;
+            if (societa.individui[index].tipo == 'B') {
+                shdata->children_a[index].alive = 0;
+            }
             semop(sem_id, &sem_1_u, 1);
+
+            pid_t pid = societa.individui[index].pid;
+            kill(pid, SIGTERM);
+
+            while (waitpid(pid, &status, 0) > 0) {
+                // TODO stats
+            };
         }
 
-        pid_t pid = societa.individui[index].pid;
-        kill(pid, SIGTERM);
 
-        while (waitpid(pid, &status, 0) > 0){
-            // TODO stats
-        };
-
-        
 
         // generate new child
         struct individuo figlio = gen_individuo();
@@ -624,19 +631,8 @@ void alarm_handler(int sig) {
         print_stats();
     }
 
-    if (trigger_end_sim == SIM_TIME) {
-        printf("P | alarm_handler: trigger_end_sim\n");
-        for(int i=0; i<societa.cur_idx;i++){
-            kill(societa.individui[i].pid, SIGTERM);
-        }
-        print_stats();
-        end_simulation = 1;
-    }
-
     trigger_birth_death++;
     trigger_end_sim++;
-
-    if(!end_simulation) alarm(1);
 }
 
 struct individuo search_longest_name() {
@@ -656,7 +652,7 @@ struct individuo search_highest_genoma() {
     int index_max_genoma = 0;
     for (int i = 0; i < societa.cur_idx; i++) {
         if (societa.individui[i].genoma > max_genoma) {
-            max_genoma = strlen(societa.individui[i].nome);
+            max_genoma = societa.individui[i].genoma;
             index_max_genoma = i;
         }
     }

@@ -242,7 +242,6 @@ int contact_patner(int index, struct individuo my_info, int pida){
 
     // lock resource
     semop(sem_a_id, &sem_2_l, 1);
-    TEST_ERROR;
     // printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_a_id);
 
     // skip dead child
