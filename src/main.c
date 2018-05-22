@@ -62,6 +62,7 @@ struct stats {
     int num_type_a;
     int num_type_b;
     int num_birth_death;
+    int num_match_born;
     struct popolazione *societa;
 };
 
@@ -238,10 +239,10 @@ int main(int argc, char *argv[]) {
     // main loop
     int wstatus;
     while ((child_pid = wait(&wstatus)) > 0 || !end_simulation) {
-        if (child_pid <= 0) {
-            usleep(50000);
-            continue;
-        }
+//        if (child_pid <= 0) {
+//            usleep(50000);
+//            continue;
+//        }
         printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
 
         // update statistics
@@ -510,6 +511,7 @@ void mate_and_fork(struct individuo a, struct individuo b) {
     new_born.pid = child_pid;
     add_to_societa(new_born);
     publish_shared_data(new_born);
+    statistics.num_match_born++;
 }
 
 void init_societa(int init_pop) {
@@ -667,6 +669,7 @@ void print_stats() {
     printf("P | num_type_a: %d\n", statistics.num_type_a);
     printf("P | num_type_b: %d\n", statistics.num_type_b);
     printf("P | num_birth_death: %d\n", statistics.num_birth_death);
+    printf("P | num_match_born: %d\n", statistics.num_match_born);
     printf("P | child_longest_name: %s\n", child_longest_name.nome);
     printf("P | child_highest_genoma: %li\n", child_highest_genoma.genoma);
     printf("P | total population: %d\n", statistics.societa->cur_idx);
