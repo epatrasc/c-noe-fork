@@ -6,7 +6,7 @@
 - use signal SIGUSER1/2 to trigger the read from the queue
 - handle stats counters
 - handle msg queue read with a loop
-- delete msg queue
+- delete msg queue ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK
 
 - create a list of process alive: ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) DONE by filtering alive
 - wait update societa when a process is dead: ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK

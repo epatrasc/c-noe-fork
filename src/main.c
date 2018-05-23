@@ -33,6 +33,9 @@
                 strerror(errno));                  \
     }
 
+#define DEBUG_LINE                                \
+    printf("P | DEBUG %s:%d: PID=%5d\n", __FILE__, __LINE__, getpid());
+
 struct individuo {
     char tipo;
     char *nome;
@@ -114,7 +117,7 @@ void print_stats();
 
 int pick_random_process();
 
-int *read_queue();
+void read_queue(int *received);
 
 void alarm_handler(int sig);
 
@@ -128,7 +131,7 @@ const int MAX_CHAR = 90; // Z
 const int SHMFLG = IPC_CREAT | 0666;
 
 // handle termination
-volatile sig_atomic_t end_simulation = 0;
+volatile bool end_simulation = 0;
 
 // Global variables
 int shmid, sem_id;
@@ -144,7 +147,7 @@ struct sembuf sem_1_u = {0, 1, 0};
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
 unsigned long GENES = 10000;
-unsigned int BIRTH_DEATH = 5;   //seconds
+unsigned int BIRTH_DEATH = 10;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
 
 int main(int argc, char *argv[]) {
@@ -161,7 +164,6 @@ int main(int argc, char *argv[]) {
         printf("P | initial population is less then 2\n");
         exit(EXIT_FAILURE);
     }
-
     INIT_PEOPLE = atoi(argv[1]);
     printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
 
@@ -178,6 +180,7 @@ int main(int argc, char *argv[]) {
     pid_t child_pid;
     for (int i = 0; i < INIT_PEOPLE; i++) {
         // generate child
+
         struct individuo figlio = gen_individuo();
         if (i == 0)figlio.tipo = 'A';
         if (i == 1)figlio.tipo = 'B';
@@ -204,14 +207,12 @@ int main(int argc, char *argv[]) {
         add_to_societa(figlio);
         publish_shared_data(figlio);
     }
-
     printf("P | CHILD Generation END\n");
 
     for (int i = 0; i < shdata->cur_idx; i++) {
         struct child_a child = shdata->children_a[i];
         printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
-
     //creat sem to sync shared memory
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
@@ -225,7 +226,6 @@ int main(int argc, char *argv[]) {
         printf("P | Sending SIGUSR1 to the child %d...\n", societa.individui[i].pid);
         kill(societa.individui[i].pid, SIGUSR1);
     }
-
     struct sigaction sa, sa_old;
     sa.sa_handler = &alarm_handler;
     sa.sa_flags = 0;
@@ -234,71 +234,72 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     signal(SIGALRM, alarm_handler);
+    //sleep(10000);
     alarm(1);
 
     // main loop
     int wstatus;
     while ((child_pid = wait(&wstatus)) > 0 || !end_simulation) {
-//        if (child_pid <= 0) {
-//            usleep(50000);
-//            continue;
-//        }
+
+       if (child_pid <= 0) {
+           usleep(50000);
+           continue;
+       }
         printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
-
-        // update statistics
-        struct individuo child = get_individuo_by_pid(child_pid, societa);
-        if (child.tipo == 'A') statistics.num_type_a++;
-        if (child.tipo == 'B') statistics.num_type_b++;
-
+        DEBUG_LINE;
         // update alive
         int index = get_index_by_pid(child_pid, societa);
+        printf("P | index: %d\n", index);
+        DEBUG_LINE;
         if (index > -1) societa.individui[index].alive = 0;
-
+        DEBUG_LINE;
         // handle queue msg
-        int *rcv;
-        rcv = read_queue();
-        while (rcv[0] != -1 && !end_simulation) {
+        int rcv[2];
+        DEBUG_LINE;
+        read_queue(rcv);
+        DEBUG_LINE;
+        printf("P | rcv[0]: %d\n", rcv[0]);
+        while (rcv[0] > 0 ) {
+            DEBUG_LINE;
             struct individuo a = get_individuo_by_pid(rcv[0], societa);
             struct individuo b = get_individuo_by_pid(rcv[1], societa);
             mate_and_fork(a, b);
-            rcv = read_queue();
+            read_queue(rcv);
         }
     }
 
     free_shmemory();
     // Now the semaphore can be deallocated
     semctl(sem_id, 0, IPC_RMID);
+    msgctl(sem_id, IPC_RMID, NULL);
+  
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
 }
 
-int *read_queue() {
-    int msgid;
-    static int received[] = {-1, -1};
-    msgid = msgget(getpid(), 0666);
+void read_queue(int *received) {
+    int msgid = msgget(getpid(), 0666);
+    received[0]=-1;
+    received[1]=-1;
 
     if (msgrcv(msgid, &received, sizeof(int), 0, IPC_NOWAIT) == -1) {
         if (errno != ENOMSG) {
-            fprintf(stderr, "P | No messagges...\n");
-            return received;
+            printf("P | msgrcv errno: %d\n", errno);
         }
     }
-
     printf("P | QUEUE MSG[0]:%d | QUEUE MSG[1]:%d\n", received[0], received[1]);
-
-    return received;
 }
 
 unsigned long gen_genoma(unsigned long min, unsigned long max) {
     return rand_interval_lu(min, max);
 }
 
-char *gen_name(char *name) {
+char * gen_name(char *name) {
     int new_length = (int) (strlen(name) + 2);
     char *new_name = calloc(sizeof(char), new_length);
-
+    printf("P | gen_name name: %s\n", name);
     sprintf(new_name, "%s%c", name, (char) rand_interval(MIN_CHAR, MAX_CHAR));
-    printf("P | gen_name: %s\n", new_name);
+    printf("P | gen_name new_name: %s\n", new_name);
     return new_name;
 }
 
@@ -492,6 +493,8 @@ void mate_and_fork(struct individuo a, struct individuo b) {
     struct individuo new_born;
     pid_t child_pid;
 
+    printf("P | mate_and_fork \n");
+
     new_born = gen_individuo_erede(a, b);
 
     child_pid = fork();
@@ -511,6 +514,9 @@ void mate_and_fork(struct individuo a, struct individuo b) {
     new_born.pid = child_pid;
     add_to_societa(new_born);
     publish_shared_data(new_born);
+
+    // update statistics
+    new_born.tipo == 'A' ? statistics.num_type_a++ : statistics.num_type_b++;
     statistics.num_match_born++;
 }
 
@@ -573,7 +579,6 @@ int pick_random_process() {
 
 void alarm_handler(int sig) {
     printf("P | alarm_handler: signal%d\n", sig);
-    if (!end_simulation) alarm(1);
 
     if (trigger_end_sim == SIM_TIME) {
         printf("P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim\n");
@@ -581,10 +586,9 @@ void alarm_handler(int sig) {
             kill(societa.individui[i].pid, SIGTERM);
         }
         print_stats();
-        end_simulation = 1;
-    }
-
-    if (trigger_birth_death == BIRTH_DEATH) {
+        end_simulation = true;
+        return;
+    } else if (trigger_birth_death == BIRTH_DEATH) {
         trigger_birth_death = 0;
 
         // kill random child
@@ -600,15 +604,16 @@ void alarm_handler(int sig) {
             pid_t pid = societa.individui[index].pid;
             kill(pid, SIGTERM);
 
-            while (waitpid(pid, &status, 0) > 0) {
-                // TODO stats
-            };
+            // while (waitpid(pid, &status, 0) > 0) {
+            //     // TODO stats
+            // };
         }
 
 
 
         // generate new child
         struct individuo figlio = gen_individuo();
+        figlio.tipo =='A' ? statistics.num_type_a++ : statistics.num_type_b++;
         pid_t child_pid = fork();
 
         /* Handle error create child*/
@@ -635,6 +640,7 @@ void alarm_handler(int sig) {
 
     trigger_birth_death++;
     trigger_end_sim++;
+    if (!end_simulation) alarm(1);
 }
 
 struct individuo search_longest_name() {
