@@ -5,7 +5,8 @@
 
 ## main.c
 
-- read PARAM from file or argv
+- read PARAM from file or argv![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK
+- delete msg queue ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK
 - handle stats counters
 - handle msg queue read with a loop ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK
 - delete msg queue ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) OK

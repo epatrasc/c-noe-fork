@@ -135,6 +135,8 @@ struct individuo search_longest_name();
 
 struct individuo search_highest_genoma();
 
+const char *getfield(char *line, int num);
+
 //costants
 const int MIN_CHAR = 65; // A
 const int MAX_CHAR = 90; // Z
@@ -155,28 +157,96 @@ struct sembuf sem_1_l = {0, -1, 0};
 struct sembuf sem_1_u = {0, 1, 0};
 
 // Input arguments;
-int INIT_PEOPLE = 10; // number of inital children
+unsigned int INIT_PEOPLE = 10; // number of inital children
 unsigned long GENES = 100000;
 unsigned int BIRTH_DEATH = 5;   //seconds
-unsigned int SIM_TIME = 1 * 60; //seconds
+unsigned int SIM_TIME = 60; //seconds
 
 int main(int argc, char *argv[]) {
-    for (int i = 0; i < argc; i++) {
-        printf("P | arg[%d]: %s \n", i, argv[i]);
-    }
-
+    // init config
     if (argc < 2) {
-        printf("P | insufficient arguments\n");
+        printf("P | argc < 2 | Switch to csv mode config\n");
+        // config from csv
+        char line_1[1024];
+        char line_2[1024];
+        char *tmp = NULL;
+        FILE *stream = fopen("./config/config.csv", "r");
+        // first line header
+        fgets(line_1, 1024, stream);
+        // print first csv header
+        printf("P | Printing csv header...\n");
+    
+        for (int i = 1; i < 5; i++) {
+            tmp = strdup(line_1);
+            printf("P | Field[%d] name:  %s\n", i, getfield(tmp, i));
+        }
+        free(tmp);
+        tmp = NULL;
+    
+        // second line arguments
+        fgets(line_2, 1024, stream);
+    
+        
+        tmp = strdup(line_2);
+        INIT_PEOPLE = (unsigned int) strtol(getfield(tmp, 1), NULL, 10); // int
+        tmp = strdup(line_2);
+        GENES = (unsigned long) strtol(getfield(tmp, 2), NULL, 10);
+        tmp = strdup(line_2);
+        BIRTH_DEATH = (unsigned int) strtol(getfield(tmp, 3), NULL, 10);
+        tmp = strdup(line_2);
+        SIM_TIME = (unsigned int) strtol(getfield(tmp, 4), NULL, 10);
+
+        printf("P | Field[INIT_PEOPLE]: %d\n", INIT_PEOPLE);
+        printf("P | Field[GENES]: %lu\n", GENES);
+        printf("P | Field[BIRTH_DEATH]: %d\n", BIRTH_DEATH);
+        printf("P | Field[SIM_TIME]: %d\n", SIM_TIME);
+
+        free(tmp);
+        tmp = NULL;
+    }
+
+    if (argc >= 2) {
+        printf("P | argc > 2 | Set config from command-line\n");
+        for (int i = 0; i < argc; i++) {
+            printf("P | arg[%d]: %s \n", i, argv[i]);
+        }
+
+        INIT_PEOPLE = (unsigned int) strtol(argv[1], NULL, 10); // int
+
+        if(argc >= 3){
+            GENES = (unsigned long) strtol(argv[2], NULL, 10);
+            BIRTH_DEATH = (unsigned int) strtol(argv[3], NULL, 10);
+            SIM_TIME = (unsigned int) strtol(argv[4], NULL, 10);
+        }
+    }
+
+    printf("P | Run with the following config:\n");
+    printf("P | INIT_PEOPLE: %d\n", INIT_PEOPLE);
+    printf("P | GENES: %lu\n", GENES);
+    printf("P | BIRTH_DEATH: %d\n", BIRTH_DEATH);
+    printf("P | SIM_TIME: %d\n", SIM_TIME);
+
+    // validate input
+    if (INIT_PEOPLE < 2) {
+        printf("P | ERROR | INIT_PEOPLE is less then 2. Change config.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (atoi(argv[1]) < 2) {
-        printf("P | initial population is less then 2\n");
+    if (GENES < 2) {
+        printf("P | ERROR | GENES is less then 2. Change config.\n");
         exit(EXIT_FAILURE);
     }
-    INIT_PEOPLE = atoi(argv[1]);
-    printf("P | INIT_PEOPLE: %d \n", INIT_PEOPLE);
 
+    if (BIRTH_DEATH < 1) {
+        printf("P | ERROR | BIRTH_DEATH is less then 1. Change config.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (SIM_TIME < 1 && SIM_TIME <= BIRTH_DEATH ) {
+        printf("P | ERROR | SIM_TIME is less then 1 or BIRTH_DEATH. Change config.\n");
+        exit(EXIT_FAILURE);
+    }
+    exit(EXIT_FAILURE);
     //init steps
     srand48(time(NULL));
     compile_child_code('A');
@@ -250,10 +320,10 @@ int main(int argc, char *argv[]) {
     int cnt_kill = 0;
     while ((child_pid = wait(&wstatus)) > 0) {
         cnt_kill++;
-       if (child_pid <= 0) {
-           usleep(50000);
-           continue;
-       }
+        if (child_pid <= 0) {
+            usleep(50000);
+            continue;
+        }
         printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
 
         // update alive
@@ -267,8 +337,8 @@ int main(int argc, char *argv[]) {
 
         received = read_queue();
 
-        while (received.pid_sender > 0 ) {
-    
+        while (received.pid_sender > 0) {
+
             struct individuo a = get_individuo_by_pid(received.pid_sender, societa);
             struct individuo b = get_individuo_by_pid(received.pid_match, societa);
             mate_and_fork(a, b);
@@ -281,8 +351,8 @@ int main(int argc, char *argv[]) {
     semctl(sem_id, 0, IPC_RMID);
 
     if (msgctl(sem_id, IPC_RMID, NULL) == -1) {
-		fprintf(stderr, "P | Message queue could not be deleted.\n");
-	}
+        fprintf(stderr, "P | Message queue could not be deleted.\n");
+    }
 
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
@@ -291,7 +361,7 @@ int main(int argc, char *argv[]) {
 struct message read_queue() {
     int msgid = msgget(getpid(), 0666);
     struct msgbuf msgbuffer;
-    
+
     msgbuffer.mtext.pid_sender = -1;
     msgbuffer.mtext.pid_match = -1;
 
@@ -301,7 +371,7 @@ struct message read_queue() {
             printf("P | msgrcv errno: %d | Retry...\n", errno);
             usleep(50000);//50 ms
             if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
-                 printf("P | msgrcv errno: %d \n", errno);
+                printf("P | msgrcv errno: %d \n", errno);
             }
         }
 
@@ -321,7 +391,7 @@ unsigned long gen_genoma(unsigned long min, unsigned long max) {
     return rand_interval_lu(min, max);
 }
 
-char * gen_name(char *name) {
+char *gen_name(char *name) {
     int new_length = (int) (strlen(name) + 2);
     char *new_name = calloc(sizeof(char), new_length);
     printf("P | gen_name name: %s\n", name);
@@ -619,7 +689,7 @@ void alarm_handler(int sig) {
 
         // kill random child
         int index = pick_random_process();
-        if(index>=0){
+        if (index >= 0) {
             semop(sem_id, &sem_1_l, 1);
             shdata->children_a[index].alive = 0;
             semop(sem_id, &sem_1_u, 1);
@@ -630,7 +700,7 @@ void alarm_handler(int sig) {
 
         // generate new child
         struct individuo figlio = gen_individuo();
-        figlio.tipo =='A' ? statistics.num_type_a++ : statistics.num_type_b++;
+        figlio.tipo == 'A' ? statistics.num_type_a++ : statistics.num_type_b++;
         pid_t child_pid = fork();
 
         /* Handle error create child*/
@@ -697,4 +767,15 @@ void print_stats() {
     printf("P | child_highest_genoma: %li\n", child_highest_genoma.genoma);
     printf("P | total population: %d\n", statistics.societa->cur_idx);
     printf("P | *** STATISTIC END ***\n");
+}
+
+const char *getfield(char *line, int num) {
+    const char *tok;
+    for (tok = strtok(line, ";");
+         tok && *tok;
+         tok = strtok(NULL, ";\n")) {
+        if (!--num)
+            return tok;
+    }
+    return NULL;
 }
