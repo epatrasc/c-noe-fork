@@ -44,6 +44,16 @@ struct individuo {
     bool alive;
 };
 
+struct message {
+    pid_t pid_sender;
+    pid_t pid_match;
+};
+
+struct msgbuf {
+    long mtype;             /* message type, must be > 0 */
+    struct message mtext;    /* message data */
+};
+
 struct popolazione {
     size_t size;
     unsigned int cur_idx;
@@ -117,7 +127,7 @@ void print_stats();
 
 int pick_random_process();
 
-void read_queue(int *received);
+struct message read_queue();
 
 void alarm_handler(int sig);
 
@@ -131,7 +141,7 @@ const int MAX_CHAR = 90; // Z
 const int SHMFLG = IPC_CREAT | 0666;
 
 // handle termination
-volatile bool end_simulation = 0;
+volatile sig_atomic_t end_simulation = 0;
 
 // Global variables
 int shmid, sem_id;
@@ -147,7 +157,7 @@ struct sembuf sem_1_u = {0, 1, 0};
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
 unsigned long GENES = 10000;
-unsigned int BIRTH_DEATH = 10;   //seconds
+unsigned int BIRTH_DEATH = 5;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
 
 int main(int argc, char *argv[]) {
@@ -228,18 +238,16 @@ int main(int argc, char *argv[]) {
     }
     struct sigaction sa, sa_old;
     sa.sa_handler = &alarm_handler;
-    sa.sa_flags = 0;
-    if (sigaction(SIGALRM, &sa, &sa_old) == -1) {  //settaggi handler
-        perror("ERRORE SIGACTION");
-        exit(EXIT_FAILURE);
-    }
-    signal(SIGALRM, alarm_handler);
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, &sa_old);
+
     //sleep(10000);
     alarm(1);
 
     // main loop
     int wstatus;
-    while ((child_pid = wait(&wstatus)) > 0 || !end_simulation) {
+    while ((child_pid = wait(&wstatus)) > 0) {
 
        if (child_pid <= 0) {
            usleep(50000);
@@ -254,40 +262,62 @@ int main(int argc, char *argv[]) {
         if (index > -1) societa.individui[index].alive = 0;
         DEBUG_LINE;
         // handle queue msg
-        int rcv[2];
+        struct message received;
         DEBUG_LINE;
-        read_queue(rcv);
+        received = read_queue();
         DEBUG_LINE;
-        printf("P | rcv[0]: %d\n", rcv[0]);
-        while (rcv[0] > 0 ) {
+        while (received.pid_sender > 0 ) {
             DEBUG_LINE;
-            struct individuo a = get_individuo_by_pid(rcv[0], societa);
-            struct individuo b = get_individuo_by_pid(rcv[1], societa);
+            struct individuo a = get_individuo_by_pid(received.pid_sender, societa);
+            struct individuo b = get_individuo_by_pid(received.pid_match, societa);
             mate_and_fork(a, b);
-            read_queue(rcv);
+            received = read_queue();
         }
     }
 
     free_shmemory();
     // Now the semaphore can be deallocated
     semctl(sem_id, 0, IPC_RMID);
-    msgctl(sem_id, IPC_RMID, NULL);
-  
+
+    if (msgctl(sem_id, IPC_RMID, NULL) == -1) {
+		fprintf(stderr, "P | Message queue could not be deleted.\n");
+	}
+
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
 }
 
-void read_queue(int *received) {
+struct message read_queue() {
     int msgid = msgget(getpid(), 0666);
-    received[0]=-1;
-    received[1]=-1;
+    DEBUG_LINE;
+    struct msgbuf msgbuffer;
+    
+    msgbuffer.mtext.pid_sender = -1;
+    msgbuffer.mtext.pid_match = -1;
 
-    if (msgrcv(msgid, &received, sizeof(int), 0, IPC_NOWAIT) == -1) {
+    DEBUG_LINE;
+    int mreturn = -1;
+    if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
         if (errno != ENOMSG) {
-            printf("P | msgrcv errno: %d\n", errno);
+            printf("P | msgrcv errno: %d | Retry...\n", errno);
+            usleep(50000);//50 ms
+            if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
+                 printf("P | msgrcv errno: %d \n", errno);
+            }
+        }
+
+        if (errno == ENOMSG) {
+            printf("P | errno: %d | NO MESSAGE QUEUE\n", errno);
         }
     }
-    printf("P | QUEUE MSG[0]:%d | QUEUE MSG[1]:%d\n", received[0], received[1]);
+
+    DEBUG_LINE;
+    pid_t sender = msgbuffer.mtext.pid_sender;
+    pid_t match = msgbuffer.mtext.pid_match;
+    printf("P | QUEUE MSG | sender: %d | match: %d\n", sender, match);
+    DEBUG_LINE;
+
+    return msgbuffer.mtext;
 }
 
 unsigned long gen_genoma(unsigned long min, unsigned long max) {
@@ -578,7 +608,7 @@ int pick_random_process() {
 }
 
 void alarm_handler(int sig) {
-    printf("P | alarm_handler: signal%d\n", sig);
+    printf("P | alarm_handler signal: %d\n", sig);
 
     if (trigger_end_sim == SIM_TIME) {
         printf("P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim\n");
@@ -587,29 +617,19 @@ void alarm_handler(int sig) {
         }
         print_stats();
         end_simulation = true;
-        return;
     } else if (trigger_birth_death == BIRTH_DEATH) {
         trigger_birth_death = 0;
 
         // kill random child
         int index = pick_random_process();
         if(index>=0){
-            int status;
             semop(sem_id, &sem_1_l, 1);
-            if (societa.individui[index].tipo == 'B') {
-                shdata->children_a[index].alive = 0;
-            }
+            shdata->children_a[index].alive = 0;
             semop(sem_id, &sem_1_u, 1);
 
             pid_t pid = societa.individui[index].pid;
             kill(pid, SIGTERM);
-
-            // while (waitpid(pid, &status, 0) > 0) {
-            //     // TODO stats
-            // };
         }
-
-
 
         // generate new child
         struct individuo figlio = gen_individuo();

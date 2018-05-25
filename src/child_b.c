@@ -31,6 +31,16 @@ struct individuo {
     bool alive;
 };
 
+struct message {
+    pid_t pid_sender;
+    pid_t pid_match;
+};
+
+struct msgbuf {
+    long mtype;             /* message type, must be > 0 */
+    struct message mtext;    /* message data */
+};
+
 struct child_a {
     unsigned long genoma;
     pid_t pid;
@@ -43,14 +53,23 @@ struct shared_data {
 };
 
 int mcd(unsigned long a, unsigned long b);
+
 bool isForMe(unsigned long gen_a, unsigned long gen_b);
+
 int searchPatner(struct individuo my_info, struct shared_data *shdata);
+
 void open_shmemory();
+
 bool isAlive(int index);
+
 void setDead(int index);
+
 void send_msg_to_gestore(int pid_a);
+
 void exit_handler(void);
+
 int contact_patner(int index, struct individuo my_info, int pida);
+
 void handle_termination(int signum);
 
 
@@ -75,9 +94,11 @@ int main(int argc, char *argv[]) {
 
     atexit(exit_handler);
     memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = handle_termination;
+    action.sa_handler = &handle_termination;
+    action.sa_flags = SA_RESTART;
     sigaction(SIGTERM, &action, NULL);
-    
+    sigemptyset(&action.sa_mask);
+
     printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
     if (argc < 2) {
         printf("B | I need name and genoma input from argv. \n");
@@ -112,20 +133,20 @@ int main(int argc, char *argv[]) {
     // search patner
     printf("B | PID: %d, Cerco patner...\n", getpid());
     int foundMate = 0;
-    while(!foundMate && !done){
+    while (!foundMate && !done) {
         int index = -1;
-        
-        if((index = searchPatner(my_info, shdata))>=0){
+
+        if ((index = searchPatner(my_info, shdata)) >= 0) {
             printf("B | PID: %d, patner ideale trovato: %d\n", getpid(), index);
-            
-            int pida =  shdata->children_a[index].pid;
+
+            int pida = shdata->children_a[index].pid;
             foundMate = contact_patner(index, my_info, pida);
 
-            if(foundMate == 1){
-                printf("B | PID: %d, patner ha accettato: %d\n", getpid(), index);
+            if (foundMate == 1) {
+                printf("B | PID: %d, patner ha accettato: %d\n", getpid(), pida);
                 send_msg_to_gestore(pida);
-            }else{
-                printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), index);
+            } else {
+                printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), pida);
             }
         }
         usleep(50000);
@@ -140,7 +161,7 @@ int main(int argc, char *argv[]) {
 
 void send_msg_to_gestore(int pid_a) {
     printf("B | PID: %d, contacting parent..\n", getpid());
-    // send info to gestore
+    // open msg queue
     int key = getppid();
     int msgid = msgget(key, 0666 | IPC_CREAT);
 
@@ -152,21 +173,27 @@ void send_msg_to_gestore(int pid_a) {
         }
     }
 
-    // Send messages ..
-    int ret, msg[2] = {getpid(), pid_a};
-    ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
-    if (ret == -1) {
+    // Send message ..
+    int mreturn= -1;
+    struct msgbuf msg;
+
+    msg.mtype = 1;
+    msg.mtext.pid_sender = getpid();
+    msg.mtext.pid_match = pid_a;
+
+    printf("A | PID: %d, Send message ...\n", getpid());
+
+    if ((mreturn = msgsnd(msgid, &msg, sizeof(msg), IPC_NOWAIT)) == -1) {
         if (errno != EAGAIN) {
-            fprintf(stderr, "B | Message could not be sended.\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "B | errno: %d | Message could not be sended. Retry...\n", errno);
         }
-        usleep(50000);//50ms
+        usleep(50000);//50 ms
         //try again
-        if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
+        if ((mreturn = msgsnd(msgid, &msg, sizeof(msg), IPC_NOWAIT)) == -1) {
             fprintf(stderr, "B | Message could not be sended.\n");
-            exit(EXIT_FAILURE);
         }
     }
+
     printf("B | PID: %d, message to the parent sent.\n", getpid());
 }
 
@@ -206,15 +233,15 @@ bool isForMe(unsigned long gen_a, unsigned long gen_b) {
     return false;
 }
 
-int searchPatner(struct individuo my_info, struct shared_data *shdata){
+int searchPatner(struct individuo my_info, struct shared_data *shdata) {
     int patnerIndex = -1;
     int maxMCD = 0;
 
     for (int i = 0; i < shdata->cur_idx; i++) {
-        if(!shdata->children_a[i].alive) continue;
+        if (!shdata->children_a[i].alive) continue;
 
         struct child_a child = shdata->children_a[i];
-        
+
         // perfect match
         if (child.genoma % my_info.genoma == 0) {
             return i;
@@ -222,16 +249,16 @@ int searchPatner(struct individuo my_info, struct shared_data *shdata){
         int mcd_value = mcd(child.genoma, my_info.genoma);
 
         // search max mcd
-        if ( mcd_value > maxMCD) {
+        if (mcd_value > maxMCD) {
             patnerIndex = i;
-            maxMCD  = mcd_value;
+            maxMCD = mcd_value;
         }
     }
 
     return patnerIndex;
 }
 
-int contact_patner(int index, struct individuo my_info, int pida){
+int contact_patner(int index, struct individuo my_info, int pida) {
     struct child_a child;
     char *pida_s = calloc(sizeof(char), sizeof(pid_t));
     char *pid_s = calloc(sizeof(char), sizeof(pid_t));
@@ -239,7 +266,7 @@ int contact_patner(int index, struct individuo my_info, int pida){
 
     // access to the child semaphore
     sem_a_id = semget(pida, 1, IPC_CREAT | 0666);
-    
+
     // print semaphore status
     int sem_val = semctl(sem_a_id, 0, GETVAL);
     printf("B | pid %d | sem_a_id: %d | sem_val: %d\n", getpid(), sem_a_id, sem_val);
@@ -263,7 +290,7 @@ int contact_patner(int index, struct individuo my_info, int pida){
     printf("B |  pid: %d | child->pid: %d \n", getpid(), child.pid);
     printf("B |  pid: %d | child->genoma: %lu \n", getpid(), child.genoma);
     printf("B |  pid: %d | child->alive: %d \n", getpid(), child.alive);
-    
+
     // Write message to A
     sprintf(pida_s, "%d", child.pid);
     printf("B | pid: %d, shdata->children_a[i].pid A: %s\n", getpid(), pida_s);
@@ -324,8 +351,7 @@ void setDead(int index) {
     semop(sem_shm_id, &sem_1_u, 1);
 }
 
-void exit_handler(void)
-{
+void exit_handler(void) {
     printf("B | PID: %d | exit_handler \n", getpid());
     remove(pid_s);
     semop(sem_shm_id, &sem_1_u, 1);

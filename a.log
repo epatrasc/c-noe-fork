@@ -1,0 +1,1128 @@
+
+ ---> CHILD B START | pid: 54307 <---
+B | pid: 54307 | my_info.nome: K 
+B | pid: 54307 | my_info.tipo: B 
+B | pid: 54307 | my_info.genoma: 7668 
+B | PID: 54307, Cerco patner...
+B | PID: 54307, patner ideale trovato: 0
+B | pid 54307 | sem_a_id: 16121857 | sem_val: 0
+B1 | pid 54307 | took control of 16121857 semaphore
+B |  pid: 54307 | shdata->children_a[0] IS alive 
+B |  pid: 54307 | child->pid: 54304 
+B |  pid: 54307 | child->genoma: 8788 
+B |  pid: 54307 | child->alive: 1 
+B | pid: 54307, shdata->children_a[i].pid A: 54304
+B | PID: 54307 | writing to A: start
+B | PID: 54307 | writing to A: end
+B | PID: 54307 | reading response from A...
+B | num_bytes: 1
+B | PID: 54307 | A with pid 54304 has response: 1
+B | readbuf[0] == '1': 1
+B | pid 54307 | foundMate 
+B | PID: 54307, patner ha accettato: 54304
+B | PID: 54307, contacting parent..
+A | PID: 54307, Send message ...
+B | PID: 54307, message to the parent sent.
+ ---> CHILD B END | pid: 54307 <---
+B | PID: 54307 | exit_handler 
+
+ ---> CHILD B START | pid: 54308 <---
+B | pid: 54308 | my_info.nome: P 
+B | pid: 54308 | my_info.tipo: B 
+B | pid: 54308 | my_info.genoma: 7247 
+B | PID: 54308, Cerco patner...
+B | PID: 54308, patner ideale trovato: 0
+B | pid 54308 | sem_a_id: 16121857 | sem_val: 0
+B1 | pid 54308 | took control of 16121857 semaphore
+B | pid: 54308 | shdata->children_a[0] NOT alive 
+B | PID: 54308, patner NON ha accettato: 54304
+B | PID: 54308, patner ideale trovato: 1
+B | pid 54308 | sem_a_id: 9240578 | sem_val: 0
+B1 | pid 54308 | took control of 9240578 semaphore
+B |  pid: 54308 | shdata->children_a[1] IS alive 
+B |  pid: 54308 | child->pid: 54310 
+B |  pid: 54308 | child->genoma: 7530 
+B |  pid: 54308 | child->alive: 1 
+B | pid: 54308, shdata->children_a[i].pid A: 54310
+B | PID: 54308, patner NON ha accettato: 54310
+ ---> CHILD B END | pid: 54308 <---
+B | PID: 54308 | exit_handler 
+P | arg[0]: ./exec/main.exe 
+P | arg[1]: 5 
+P | INIT_PEOPLE: 5 
+P | COMPILE TYPE FILE: A | terminated with exit status 0
+P | COMPILE TYPE FILE: B | terminated with exit status 0
+P | gen_name name: 
+P | gen_name new_name: F
+P | CHILD BORN[0]: 54304 A
+P | gen_name name: 
+P | gen_name new_name: W
+P | CHILD BORN[1]: 54305 B
+P | gen_name name: 
+P | gen_name new_name: H
+P | CHILD BORN[2]: 54306 B
+P | gen_name name: 
+P | gen_name new_name: K
+P | CHILD BORN[3]: 54307 B
+P | gen_name name: 
+P | gen_name new_name: P
+P | CHILD BORN[4]: 54308 B
+P | CHILD Generation END
+P | GESTORE pid: 54297 | [0] child_a pid: 54304 
+P | pid 54297 | sem_a_id: 14090240
+P | Sending SIGUSR1 to the child 54304...
+P | Sending SIGUSR1 to the child 54305...
+P | Sending SIGUSR1 to the child 54306...
+P | Sending SIGUSR1 to the child 54307...
+P | Sending SIGUSR1 to the child 54308...
+P | Ended child : 54307 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 3
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54304 | match: 54307
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: FK
+P | gen_name new_name: FKU
+P | gen_individuo_erede a.nome: F
+P | gen_individuo_erede a.genoma: 8788
+P | gen_individuo_erede b.nome: K
+P | gen_individuo_erede b.genoma: 7668
+P | gen_individuo_erede x: 4
+P | new_child.tipo: B
+P | new_child.nome: FKU
+P | new_child.genoma: 3437
+P | mate_and_fork CHILD BORN: 54309 B
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54307 | match: 54304
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: KF
+P | gen_name new_name: KFW
+P | gen_individuo_erede a.nome: K
+P | gen_individuo_erede a.genoma: 7668
+P | gen_individuo_erede b.nome: F
+P | gen_individuo_erede b.genoma: 8788
+P | gen_individuo_erede x: 4
+P | new_child.tipo: A
+P | new_child.nome: KFW
+P | new_child.genoma: 7530
+P | mate_and_fork CHILD BORN: 54310 A
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | Ended child : 54308 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 4
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54310 | match: 54305
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: KFWW
+P | gen_name new_name: KFWWX
+P | gen_individuo_erede a.nome: KFW
+P | gen_individuo_erede a.genoma: 7530
+P | gen_individuo_erede b.nome: W
+P | gen_individuo_erede b.genoma: 1914
+P | gen_individuo_erede x: 6
+P | new_child.tipo: B
+P | new_child.nome: KFWWX
+P | new_child.genoma: 5405
+P | mate_and_fork CHILD BORN: 54311 B
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54305 | match: 54310
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: WKFW
+P | gen_name new_name: WKFWG
+P | gen_individuo_erede a.nome: W
+P | gen_individuo_erede a.genoma: 1914
+P | gen_individuo_erede b.nome: KFW
+P | gen_individuo_erede b.genoma: 7530
+P | gen_individuo_erede x: 6
+P | new_child.tipo: A
+P | new_child.nome: WKFWG
+P | new_child.genoma: 6303
+P | mate_and_fork CHILD BORN: 54312 A
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | 
+ ---> CHILD B START | pid: 54306 <---
+B | pid: 54306 | my_info.nome: H 
+B | pid: 54306 | my_info.tipo: B 
+B | pid: 54306 | my_info.genoma: 270 
+B | PID: 54306, Cerco patner...
+B | PID: 54306, patner ideale trovato: 0
+B | pid 54306 | sem_a_id: 16121857 | sem_val: 0
+B1 | pid 54306 | took control of 16121857 semaphore
+B | pid: 54306 | shdata->children_a[0] NOT alive 
+B | PID: 54306, patner NON ha accettato: 54304
+B | PID: 54306, patner ideale trovato: 1
+B | pid 54306 | sem_a_id: 9240578 | sem_val: 0
+B1 | pid 54306 | took control of 9240578 semaphore
+B |  pid: 54306 | shdata->children_a[1] IS alive 
+B |  pid: 54306 | child->pid: 54310 
+B |  pid: 54306 | child->genoma: 7530 
+B |  pid: 54306 | child->alive: 1 
+B | pid: 54306, shdata->children_a[i].pid A: 54310
+B | PID: 54306, patner NON ha accettato: 54310
+ ---> CHILD B END | pid: 54306 <---
+B | PID: 54306 | exit_handler 
+
+ ---> CHILD B START | pid: 54305 <---
+B | pid: 54305 | my_info.nome: W 
+B | pid: 54305 | my_info.tipo: B 
+B | pid: 54305 | my_info.genoma: 1914 
+B | PID: 54305, Cerco patner...
+B | PID: 54305, patner ideale trovato: 0
+B | pid 54305 | sem_a_id: 16121857 | sem_val: 1
+B1 | pid 54305 | took control of 16121857 semaphore
+B |  pid: 54305 | shdata->children_a[0] IS alive 
+B |  pid: 54305 | child->pid: 54304 
+B |  pid: 54305 | child->genoma: 8788 
+B |  pid: 54305 | child->alive: 1 
+B | pid: 54305, shdata->children_a[i].pid A: 54304
+B | PID: 54305 | writing to A: start
+B | PID: 54305 | writing to A: end
+B | PID: 54305 | reading response from A...
+B | num_bytes: 1
+B | PID: 54305 | A with pid 54304 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54305, patner NON ha accettato: 54304
+B | PID: 54305, patner ideale trovato: 1
+B | pid 54305 | sem_a_id: 9240578 | sem_val: 1
+B1 | pid 54305 | took control of 9240578 semaphore
+B |  pid: 54305 | shdata->children_a[1] IS alive 
+B |  pid: 54305 | child->pid: 54310 
+B |  pid: 54305 | child->genoma: 7530 
+B |  pid: 54305 | child->alive: 1 
+B | pid: 54305, shdata->children_a[i].pid A: 54310
+B | PID: 54305 | writing to A: start
+B | PID: 54305 | writing to A: end
+B | PID: 54305 | reading response from A...
+B | num_bytes: 1
+B | PID: 54305 | A with pid 54310 has response: 1
+B | readbuf[0] == '1': 1
+B | pid 54305 | foundMate 
+B | PID: 54305, patner ha accettato: 54310
+B | PID: 54305, contacting parent..
+A | PID: 54305, Send message ...
+B | PID: 54305, message to the parent sent.
+ ---> CHILD B END | pid: 54305 <---
+B | PID: 54305 | exit_handler 
+
+ ---> CHILD B START | pid: 54309 <---
+B | pid: 54309 | my_info.nome: FKU 
+B | pid: 54309 | my_info.tipo: B 
+B | pid: 54309 | my_info.genoma: 3437 
+B | PID: 54309, Cerco patner...
+B | PID: 54309, patner ideale trovato: 1
+B | pid 54309 | sem_a_id: 9240578 | sem_val: 1
+B1 | pid 54309 | took control of 9240578 semaphore
+B |  pid: 54309 | shdata->children_a[1] IS alive 
+B |  pid: 54309 | child->pid: 54310 
+B |  pid: 54309 | child->genoma: 7530 
+B |  pid: 54309 | child->alive: 1 
+B | pid: 54309, shdata->children_a[i].pid A: 54310
+B | PID: 54309 | writing to A: start
+B | PID: 54309 | writing to A: end
+B | PID: 54309 | reading response from A...
+B | num_bytes: 1
+B | PID: 54309 | A with pid 54310 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54309, patner NON ha accettato: 54310
+B | PID: 54309, patner ideale trovato: 2
+B | pid 54309 | sem_a_id: 7995395 | sem_val: 0
+B1 | pid 54309 | took control of 7995395 semaphore
+B |  pid: 54309 | shdata->children_a[2] IS alive 
+B |  pid: 54309 | child->pid: 54312 
+B |  pid: 54309 | child->genoma: 6303 
+B |  pid: 54309 | child->alive: 1 
+B | pid: 54309, shdata->children_a[i].pid A: 54312
+B | PID: 54309, patner NON ha accettato: 54312
+ ---> CHILD B END | pid: 54309 <---
+B | PID: 54309 | exit_handler 
+
+ ---> CHILD B START | pid: 54311 <---
+B | pid: 54311 | my_info.nome: KFWWX 
+B | pid: 54311 | my_info.tipo: B 
+B | pid: 54311 | my_info.genoma: 5405 
+B | PID: 54311, Cerco patner...
+B | PID: 54311, patner ideale trovato: 2
+B | pid 54311 | sem_a_id: 7995395 | sem_val: 0
+B1 | pid 54311 | took control of 7995395 semaphore
+B |  pid: 54311 | shdata->children_a[2] IS alive 
+B |  pid: 54311 | child->pid: 54312 
+B |  pid: 54311 | child->genoma: 6303 
+B |  pid: 54311 | child->alive: 1 
+B | pid: 54311, shdata->children_a[i].pid A: 54312
+B | PID: 54311 | writing to A: start
+B | PID: 54311 | writing to A: end
+B | PID: 54311 | reading response from A...
+B | num_bytes: 1
+B | PID: 54311 | A with pid 54312 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54311, patner NON ha accettato: 54312
+B | PID: 54311, patner ideale trovato: 2
+B | pid 54311 | sem_a_id: 7995395 | sem_val: 2
+B1 | pid 54311 | took control of 7995395 semaphore
+B |  pid: 54311 | shdata->children_a[2] IS alive 
+B |  pid: 54311 | child->pid: 54312 
+B |  pid: 54311 | child->genoma: 6303 
+B |  pid: 54311 | child->alive: 1 
+B | pid: 54311, shdata->children_a[i].pid A: 54312
+B | PID: 54311 | writing to A: start
+B | PID: 54311 | writing to A: end
+B | PID: 54311 | reading response from A...
+B | num_bytes: 1
+B | PID: 54311 | A with pid 54312 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54311, patner NON ha accettato: 54312
+B | PID: 54311, patner ideale trovato: 2
+B | pid 54311 | sem_a_id: 7995395 | sem_val: 2
+B1 | pid 54311 | took control of 7995395 semaphore
+B |  pid: 54311 | shdata->children_a[2] IS alive 
+B |  pid: 54311 | child->pid: 54312 
+B |  pid: 54311 | child->genoma: 6303 
+B |  pid: 54311 | child->alive: 1 
+B | pid: 54311, shdata->children_a[i].pid A: 54312
+B | PID: 54311 | writing to A: start
+B | PID: 54311 | writing to A: end
+B | PID: 54311 | reading response from A...
+B | num_bytes: 1
+B | PID: 54311 | A with pid 54312 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54311, patner NON ha accettato: 54312
+B | PID: 54311, patner ideale trovato: 2
+B | pid 54311 | sem_a_id: 7995395 | sem_val: 2
+B1 | pid 54311 | took control of 7995395 semaphore
+B |  pid: 54311 | shdata->children_a[2] IS alive 
+B |  pid: 54311 | child->pid: 54312 
+B |  pid: 54311 | child->genoma: 6303 
+B |  pid: 54311 | child->alive: 1 
+B | pid: 54311, shdata->children_a[i].pid A: 54312
+B | PID: 54311 | writing to A: start
+B | PID: 54311 | writing to A: end
+B | PID: 54311 | reading response from A...
+B | num_bytes: 1
+B | PID: 54311 | A with pid 54312 has response: 0
+B | readbuf[0] == '1': 0
+B | PID: 54311, patner NON ha accettato: 54312
+B | PID: 54311, patner ideale trovato: 2
+B | pid 54311 | sem_a_id: 7995395 | sem_val: 2
+B1 | pid 54311 | took control of 7995395 semaphore
+B |  pid: 54311 | shdata->children_a[2] IS alive 
+B |  pid: 54311 | child->pid: 54312 
+B |  pid: 54311 | child->genoma: 6303 
+B |  pid: 54311 | child->alive: 1 
+B | pid: 54311, shdata->children_a[i].pid A: 54312
+B | PID: 54311 | writing to A: start
+B | PID: 54311 | writing to A: end
+B | PID: 54311 | reading response from A...
+B | num_bytes: 1
+B | PID: 54311 | A with pid 54312 has response: 1
+B | readbuf[0] == '1': 1
+B | pid 54311 | foundMate 
+B | PID: 54311, patner ha accettato: 54312
+B | PID: 54311, contacting parent..
+A | PID: 54311, Send message ...
+B | PID: 54311, message to the parent sent.
+ ---> CHILD B END | pid: 54311 <---
+B | PID: 54311 | exit_handler 
+
+ ---> CHILD A START | pid: 54310 | argc: 3 <---
+A | pid 54310 | sem_id: 9240578
+A | my_info.nome: KFW 
+A | my_info.tipo: A 
+A | my_info.genoma: 7530 
+A | waiting for type b request...
+A | fifo_a opened
+A | recieved request: 54309,FKU,3437
+A | pid_b:54309
+A | nome_b:FKU
+A | genoma_b:3437
+A | accept pid 54309? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54305,W,1914
+A | pid_b:54305
+A | nome_b:W
+A | genoma_b:1914
+A | accept pid 54305? 1
+A | fifo_b: 3
+A | PID: 54310, Message sent 
+A | PID: 54310, contacting parent...
+A | PID: 54310, Send message ...
+A | pid: 54310 | SIGTERM recevived
+ ---> CHILD A END | pid: 54310 <---
+A | PID: 54310 | exit_handler 
+sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | Ended child : 54306 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 2
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54305 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 1
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54309 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 5
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54311 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 7
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54312 | match: 54311
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: WKFWGKFWWX
+P | gen_name new_name: WKFWGKFWWXO
+P | gen_individuo_erede a.nome: WKFWG
+P | gen_individuo_erede a.genoma: 6303
+P | gen_individuo_erede b.nome: KFWWX
+P | gen_individuo_erede b.genoma: 5405
+P | gen_individuo_erede x: 1
+P | new_child.tipo: A
+P | new_child.nome: WKFWGKFWWXO
+P | new_child.genoma: 7060
+P | mate_and_fork CHILD BORN: 54313 A
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: 54311 | match: 54312
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:270: PID=54297
+P | mate_and_fork 
+P | gen_name name: KFWWXWKFWG
+P | gen_name new_name: KFWWXWKFWGN
+P | gen_individuo_erede a.nome: KFWWX
+P | gen_individuo_erede a.genoma: 5405
+P | gen_individuo_erede b.nome: WKFWG
+P | gen_individuo_erede b.genoma: 6303
+P | gen_individuo_erede x: 1
+P | new_child.tipo: A
+P | new_child.nome: KFWWXWKFWGN
+P | new_child.genoma: 9173
+P | mate_and_fork CHILD BORN: 54314 A
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: J
+P | CHILD BORN: 54324 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 5
+P | num_type_b: 2
+P | num_birth_death: 1
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9173
+P | total population: 12
+P | *** STATISTIC END ***
+P | Ended child : 54310 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 6
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P 
+ ---> CHILD A START | pid: 54313 | argc: 3 <---
+A | pid 54313 | sem_id: 5439493
+A | my_info.nome: WKFWGKFWWXO 
+A | my_info.tipo: A 
+A | my_info.genoma: 7060 
+A | waiting for type b request...
+A | pid: 54313 | SIGTERM recevived
+ ---> CHILD A END | pid: 54313 <---
+A | PID: 54313 | exit_handler 
+
+ ---> CHILD A START | pid: 54304 | argc: 3 <---
+A | pid 54304 | sem_id: 16121857
+A | my_info.nome: F 
+A | my_info.tipo: A 
+A | my_info.genoma: 8788 
+A | waiting for type b request...
+A | fifo_a opened
+A | recieved request: 54305,W,1914
+A | pid_b:54305
+A | nome_b:W
+A | genoma_b:1914
+A | accept pid 54305? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54307,K,7668
+A | pid_b:54307
+A | nome_b:K
+A | genoma_b:7668
+A | accept pid 54307? 1
+A | fifo_b: 3
+A | PID: 54304, Message sent 
+A | PID: 54304, contacting parent...
+A | PID: 54304, Send message ...
+A | pid: 54304 | SIGTERM recevived
+ ---> CHILD A END | pid: 54304 <---
+A | PID: 54304 | exit_handler 
+
+ ---> CHILD A START | pid: 54314 | argc: 3 <---
+A | pid 54314 | sem_id: 5636100
+A | my_info.nome: KFWWXWKFWGN 
+A | my_info.tipo: A 
+A | my_info.genoma: 9173 
+A | waiting for type b request...
+A | pid: 54314 | SIGTERM recevived
+ ---> CHILD A END | pid: 54314 <---
+A | PID: 54314 | exit_handler 
+
+ ---> CHILD A START | pid: 54333 | argc: 3 <---
+A | pid 54333 | sem_id: 9306114
+A | my_info.nome: O 
+A | my_info.tipo: A 
+A | my_info.genoma: 7431 
+A | waiting for type b request...
+A | pid: 54333 | SIGTERM recevived
+ ---> CHILD A END | pid: 54333 <---
+A | PID: 54333 | exit_handler 
+
+ ---> CHILD A START | pid: 54312 | argc: 3 <---
+A | pid 54312 | sem_id: 7995395
+A | my_info.nome: WKFWG 
+A | my_info.tipo: A 
+A | my_info.genoma: 6303 
+A | waiting for type b request...
+A | fifo_a opened
+A | recieved request: 54311,KFWWX,5405
+A | pid_b:54311
+A | nome_b:KFWWX
+A | genoma_b:5405
+A | accept pid 54311? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54311,KFWWX,5405
+A | pid_b:54311
+A | nome_b:KFWWX
+A | genoma_b:5405
+A | accept pid 54311? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54311,KFWWX,5405
+A | pid_b:54311
+A | nome_b:KFWWX
+A | genoma_b:5405
+A | accept pid 54311? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54311,KFWWX,5405
+A | pid_b:54311
+A | nome_b:KFWWX
+A | genoma_b:5405
+A | accept pid 54311? 0
+A | fifo_b: 3
+A | fifo_a opened
+A | recieved request: 54311,KFWWX,5405
+A | pid_b:54311
+A | nome_b:KFWWX
+A | genoma_b:5405
+A | accept pid 54311? 1
+A | fifo_b: 3
+A | PID: 54312, Message sent 
+A | PID: 54312, contacting parent...
+A | PID: 54312, Send message ...
+A | pid: 54312 | SIGTERM recevived
+ ---> CHILD A END | pid: 54312 <---
+A | PID: 54312 | exit_handler 
+| alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: O
+P | CHILD BORN: 54333 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 6
+P | num_type_b: 2
+P | num_birth_death: 2
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9173
+P | total population: 13
+P | *** STATISTIC END ***
+P | Ended child : 54313 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 9
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: U
+P | CHILD BORN: 54334 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 7
+P | num_type_b: 2
+P | num_birth_death: 3
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9173
+P | total population: 14
+P | *** STATISTIC END ***
+P | Ended child : 54304 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 0
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: F
+P | CHILD BORN: 54343 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 8
+P | num_type_b: 2
+P | num_birth_death: 4
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9173
+P | total population: 15
+P | *** STATISTIC END ***
+P | Ended child : 54314 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 10
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: F
+P | CHILD BORN: 54344 B
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 8
+P | num_type_b: 3
+P | num_birth_death: 5
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 16
+P | *** STATISTIC END ***
+P | Ended child : 54333 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 12
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: B
+P | CHILD BORN: 54345 B
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 8
+P | num_type_b: 4
+P | num_birth_death: 6
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 17
+P | *** STATISTIC END ***
+P | Ended child : 54312 | stat
+ ---> CHILD A START | pid: 54324 | argc: 3 <---
+A | pid 54324 | sem_id: 4194310
+A | my_info.nome: J 
+A | my_info.tipo: A 
+A | my_info.genoma: 6705 
+A | waiting for type b request...
+A | pid: 54324 | SIGTERM recevived
+ ---> CHILD A END | pid: 54324 <---
+A | PID: 54324 | exit_handler 
+
+ ---> CHILD B START | pid: 54345 <---
+B | pid: 54345 | my_info.nome: B 
+B | pid: 54345 | my_info.tipo: B 
+B | pid: 54345 | my_info.genoma: 2798 
+B | PID: 54345, Cerco patner...
+B | PID: 54345, patner ideale trovato: 3
+B | pid 54345 | sem_a_id: 5701636 | sem_val: 0
+B | pid: 54345 | SIGTERM recevived
+B1 | pid 54345 | took control of 5701636 semaphore
+B |  pid: 54345 | shdata->children_a[3] IS alive 
+B |  pid: 54345 | child->pid: 54313 
+B |  pid: 54345 | child->genoma: 7060 
+B |  pid: 54345 | child->alive: 1 
+B | pid: 54345, shdata->children_a[i].pid A: 54313
+B | PID: 54345, patner NON ha accettato: 54313
+ ---> CHILD B END | pid: 54345 <---
+B | PID: 54345 | exit_handler 
+
+ ---> CHILD B START | pid: 54344 <---
+B | pid: 54344 | my_info.nome: F 
+B | pid: 54344 | my_info.tipo: B 
+B | pid: 54344 | my_info.genoma: 9586 
+B | PID: 54344, Cerco patner...
+B | PID: 54344, patner ideale trovato: 3
+B | pid 54344 | sem_a_id: 5701636 | sem_val: 0
+B1 | pid 54344 | took control of 5701636 semaphore
+B |  pid: 54344 | shdata->children_a[3] IS alive 
+B |  pid: 54344 | child->pid: 54313 
+B |  pid: 54344 | child->genoma: 7060 
+B |  pid: 54344 | child->alive: 1 
+B | pid: 54344, shdata->children_a[i].pid A: 54313
+B | PID: 54344, patner NON ha accettato: 54313
+ ---> CHILD B END | pid: 54344 <---
+B | PID: 54344 | exit_handler 
+
+ ---> CHILD B START | pid: 54357 <---
+B | pid: 54357 | my_info.nome: C 
+B | pid: 54357 | my_info.tipo: B 
+B | pid: 54357 | my_info.genoma: 7229 
+B | PID: 54357, Cerco patner...
+B | PID: 54357, patner ideale trovato: 3
+B | pid 54357 | sem_a_id: 5701636 | sem_val: 1
+B1 | pid 54357 | took control of 5701636 semaphore
+B |  pid: 54357 | shdata->children_a[3] IS alive 
+B |  pid: 54357 | child->pid: 54313 
+B |  pid: 54357 | child->genoma: 7060 
+B |  pid: 54357 | child->alive: 1 
+B | pid: 54357, shdata->children_a[i].pid A: 54313
+B | PID: 54357, patner NON ha accettato: 54313
+ ---> CHILD B END | pid: 54357 <---
+B | PID: 54357 | exit_handler 
+
+ ---> CHILD A START | pid: 54334 | argc: 3 <---
+A | pid 54334 | sem_id: 5505029
+A | my_info.nome: U 
+A | my_info.tipo: A 
+A | my_info.genoma: 3117 
+A | waiting for type b request...
+A | pid: 54334 | SIGTERM recevived
+ ---> CHILD A END | pid: 54334 <---
+A | PID: 54334 | exit_handler 
+us: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 8
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: J
+P | CHILD BORN: 54354 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 9
+P | num_type_b: 4
+P | num_birth_death: 7
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 18
+P | *** STATISTIC END ***
+P | Ended child : 54324 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 11
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: C
+P | CHILD BORN: 54357 B
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 9
+P | num_type_b: 5
+P | num_birth_death: 8
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 19
+P | *** STATISTIC END ***
+P | Ended child : 54345 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 16
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54344 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 15
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54357 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 18
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: G
+P | CHILD BORN: 54359 A
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 10
+P | num_type_b: 5
+P | num_birth_death: 9
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 20
+P | *** STATISTIC END ***
+P | Ended child : 54334 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 13
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_
+ ---> CHILD A START | pid: 54343 | argc: 3 <---
+A | pid 54343 | sem_id: 16187393
+A | my_info.nome: F 
+A | my_info.tipo: A 
+A | my_info.genoma: 5522 
+A | waiting for type b request...
+A | pid: 54343 | SIGTERM recevived
+ ---> CHILD A END | pid: 54343 <---
+A | PID: 54343 | exit_handler 
+
+ ---> CHILD A START | pid: 54354 | argc: 3 <---
+A | pid 54354 | sem_id: 9371650
+A | my_info.nome: J 
+A | my_info.tipo: A 
+A | my_info.genoma: 7390 
+A | waiting for type b request...
+A | pid: 54354 | SIGTERM recevived
+ ---> CHILD A END | pid: 54354 <---
+A | PID: 54354 | exit_handler 
+
+ ---> CHILD B START | pid: 54361 <---
+B | pid: 54361 | my_info.nome: I 
+B | pid: 54361 | my_info.tipo: B 
+B | pid: 54361 | my_info.genoma: 9965 
+B | PID: 54361, Cerco patner...
+B | PID: 54361, patner ideale trovato: 3
+B | pid 54361 | sem_a_id: 5701636 | sem_val: 4
+B1 | pid 54361 | took control of 5701636 semaphore
+B |  pid: 54361 | shdata->children_a[3] IS alive 
+B |  pid: 54361 | child->pid: 54313 
+B |  pid: 54361 | child->genoma: 7060 
+B |  pid: 54361 | child->alive: 1 
+B | pid: 54361, shdata->children_a[i].pid A: 54313
+B | PID: 54361, patner NON ha accettato: 54313
+ ---> CHILD B END | pid: 54361 <---
+B | PID: 54361 | exit_handler 
+
+ ---> CHILD A START | pid: 54359 | argc: 3 <---
+A | pid 54359 | sem_id: 8060931
+A | my_info.nome: G 
+A | my_info.tipo: A 
+A | my_info.genoma: 3873 
+A | waiting for type b request...
+A | pid: 54359 | SIGTERM recevived
+ ---> CHILD A END | pid: 54359 <---
+A | PID: 54359 | exit_handler 
+
+ ---> CHILD B START | pid: 54360 <---
+B | pid: 54360 | my_info.nome: B 
+B | pid: 54360 | my_info.tipo: B 
+B | pid: 54360 | my_info.genoma: 7899 
+B | PID: 54360, Cerco patner...
+B | PID: 54360, patner ideale trovato: 5
+B | pid 54360 | sem_a_id: 5570565 | sem_val: 0
+B | pid: 54360 | SIGTERM recevived
+B1 | pid 54360 | took control of 5570565 semaphore
+B |  pid: 54360 | shdata->children_a[5] IS alive 
+B |  pid: 54360 | child->pid: 54324 
+B |  pid: 54360 | child->genoma: 6705 
+B |  pid: 54360 | child->alive: 1 
+B | pid: 54360, shdata->children_a[i].pid A: 54324
+B | PID: 54360, patner NON ha accettato: 54324
+ ---> CHILD B END | pid: 54360 <---
+B | PID: 54360 | exit_handler 
+handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: B
+P | CHILD BORN: 54360 B
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 10
+P | num_type_b: 6
+P | num_birth_death: 10
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9586
+P | total population: 21
+P | *** STATISTIC END ***
+P | Ended child : 54343 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 14
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | gen_name name: 
+P | gen_name new_name: I
+P | CHILD BORN: 54361 B
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 10
+P | num_type_b: 7
+P | num_birth_death: 11
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9965
+P | total population: 22
+P | *** STATISTIC END ***
+P | Ended child : 54354 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 17
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54361 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 21
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | alarm_handler signal: 14
+P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim
+P | *** STATISTIC UPDATE ***
+P | num_type_a: 10
+P | num_type_b: 7
+P | num_birth_death: 11
+P | num_match_born: 6
+P | child_longest_name: WKFWGKFWWXO
+P | child_highest_genoma: 9965
+P | total population: 22
+P | *** STATISTIC END ***
+P | Ended child : 54359 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 19
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+P | Ended child : 54360 | status: 0 
+P | DEBUG ./src/main.c:257: PID=54297
+P | index: 20
+P | DEBUG ./src/main.c:261: PID=54297
+P | DEBUG ./src/main.c:263: PID=54297
+P | DEBUG ./src/main.c:266: PID=54297
+P | DEBUG ./src/main.c:292: PID=54297
+P | DEBUG ./src/main.c:298: PID=54297
+P | errno: 91 | NO MESSAGE QUEUE
+P | DEBUG ./src/main.c:314: PID=54297
+P | QUEUE MSG | sender: -1 | match: -1
+P | DEBUG ./src/main.c:318: PID=54297
+P | DEBUG ./src/main.c:268: PID=54297
+
+ ---> PARENT END | pid: 54297 <---

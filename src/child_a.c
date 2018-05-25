@@ -28,6 +28,16 @@ struct individuo {
     unsigned long genoma;
 };
 
+struct message {
+    pid_t pid_sender;
+    pid_t pid_match;
+};
+
+struct msgbuf {
+    long mtype;             /* message type, must be > 0 */
+    struct message mtext;    /* message data */
+};
+
 int mcd(unsigned long a, unsigned long b);
 
 bool isGood(unsigned long gen_a, unsigned long gen_b);
@@ -50,10 +60,12 @@ int main(int argc, char *argv[]) {
     struct sigaction action;
 
     memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = handle_termination;
+    action.sa_handler = &handle_termination;
+    action.sa_flags = SA_RESTART;
     sigaction(SIGTERM, &action, NULL);
+    sigemptyset(&action.sa_mask);
     atexit(exit_handler);
-    
+
     printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
     if (argc < 3) {
         printf("A | I need name and genoma input from argv. \n");
@@ -65,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     //creat sem 
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    printf("A | pid %d | sem_id: %d\n", getpid(),sem_id);
+    printf("A | pid %d | sem_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
     TEST_ERROR;
 
@@ -145,7 +157,7 @@ int main(int argc, char *argv[]) {
 
         // if positive inform parent
         if (answer) {
-             printf("A | PID: %d, Message sent \n",getpid());
+            printf("A | PID: %d, Message sent \n", getpid());
             send_msg_parent((int) strtol(pid_b, (char **) NULL, 10));
         }
     }
@@ -172,16 +184,16 @@ int mcd(unsigned long a, unsigned long b) {
 bool isGood(unsigned long gen_a, unsigned long gen_b) {
     if (gen_a % gen_b == 0) return true;
     if (mcd(gen_a, gen_b) >= selection_level) return true;
-    
+
     selection_level--;
 
     return false;
 }
 
 void send_msg_parent(int pid_b) {
-    printf("A | PID: %d, contacting parent...\n",getpid());
+    printf("A | PID: %d, contacting parent...\n", getpid());
 
-    // send info to gestore
+    // open msg queue
     int key, mask, msgid;
 
     key = getppid();
@@ -197,30 +209,33 @@ void send_msg_parent(int pid_b) {
     }
 
     // Send message to the parent ...
-    int ret, msg[2] = {getpid(), pid_b};
-    ret = msgsnd(msgid, msg, sizeof(int), IPC_NOWAIT);
+    int mreturn= -1;
+    struct msgbuf msg;
 
-    printf("A | PID: %d, Send message ...\n",getpid());
+    msg.mtype = 1;
+    msg.mtext.pid_sender = getpid();
+    msg.mtext.pid_match = pid_b;
 
-    if (ret == -1) {
+    printf("A | PID: %d, Send message ...\n", getpid());
+
+    if ((mreturn = msgsnd(msgid, &msg, sizeof(msg), IPC_NOWAIT)) == -1) {
         if (errno != EAGAIN) {
-            fprintf(stderr, "A |Message could not be sended. Retry...\n");
+           fprintf(stderr, "A | errno: %d | Message could not be sended. Retry...\n", errno);
         }
         usleep(50000);//50 ms
         //try again
-        if (msgsnd(msgid, msg, sizeof(int), 0) == -1) {
+        if ((mreturn = msgsnd(msgid, &msg, sizeof(msg), IPC_NOWAIT)) == -1) {
             fprintf(stderr, "A | Message could not be sended.\n");
         }
     }
 }
 
 void handle_termination(int signum) {
-    printf("A | pid: %d | SIGTERM recevived\n", getpid());  
-    done = 1; 
+    printf("A | pid: %d | SIGTERM recevived\n", getpid());
+    done = 1;
 }
 
-void exit_handler(void)
-{
+void exit_handler(void) {
     printf("A | PID: %d | exit_handler \n", getpid());
 
     remove(pid_s);
