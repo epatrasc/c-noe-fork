@@ -156,7 +156,7 @@ struct sembuf sem_1_u = {0, 1, 0};
 
 // Input arguments;
 int INIT_PEOPLE = 10; // number of inital children
-unsigned long GENES = 10000;
+unsigned long GENES = 100000;
 unsigned int BIRTH_DEATH = 5;   //seconds
 unsigned int SIM_TIME = 1 * 60; //seconds
 
@@ -247,34 +247,35 @@ int main(int argc, char *argv[]) {
 
     // main loop
     int wstatus;
+    int cnt_kill = 0;
     while ((child_pid = wait(&wstatus)) > 0) {
-
+        cnt_kill++;
        if (child_pid <= 0) {
            usleep(50000);
            continue;
        }
         printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
-        DEBUG_LINE;
+
         // update alive
         int index = get_index_by_pid(child_pid, societa);
         printf("P | index: %d\n", index);
-        DEBUG_LINE;
+
         if (index > -1) societa.individui[index].alive = 0;
-        DEBUG_LINE;
+
         // handle queue msg
         struct message received;
-        DEBUG_LINE;
+
         received = read_queue();
-        DEBUG_LINE;
+
         while (received.pid_sender > 0 ) {
-            DEBUG_LINE;
+    
             struct individuo a = get_individuo_by_pid(received.pid_sender, societa);
             struct individuo b = get_individuo_by_pid(received.pid_match, societa);
             mate_and_fork(a, b);
             received = read_queue();
         }
     }
-
+    sleep(5);
     free_shmemory();
     // Now the semaphore can be deallocated
     semctl(sem_id, 0, IPC_RMID);
@@ -289,13 +290,11 @@ int main(int argc, char *argv[]) {
 
 struct message read_queue() {
     int msgid = msgget(getpid(), 0666);
-    DEBUG_LINE;
     struct msgbuf msgbuffer;
     
     msgbuffer.mtext.pid_sender = -1;
     msgbuffer.mtext.pid_match = -1;
 
-    DEBUG_LINE;
     int mreturn = -1;
     if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
         if (errno != ENOMSG) {
@@ -311,11 +310,9 @@ struct message read_queue() {
         }
     }
 
-    DEBUG_LINE;
     pid_t sender = msgbuffer.mtext.pid_sender;
     pid_t match = msgbuffer.mtext.pid_match;
     printf("P | QUEUE MSG | sender: %d | match: %d\n", sender, match);
-    DEBUG_LINE;
 
     return msgbuffer.mtext;
 }
