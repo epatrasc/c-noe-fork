@@ -226,7 +226,7 @@ bool isForMe(unsigned long gen_a, unsigned long gen_b) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= 5) {
+    if (mcd(gen_a, gen_b) >= 2) {
         return true;
     }
 
@@ -262,7 +262,7 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     struct child_a child;
     char *pida_s = calloc(sizeof(char), sizeof(pid_t));
     char *pid_s = calloc(sizeof(char), sizeof(pid_t));
-    sprintf(pid_s, "%d", getpid());
+    sprintf(pid_s, "%d_B", getpid());
 
     // access to the child semaphore
     sem_a_id = semget(pida, 1, IPC_CREAT | 0666);
