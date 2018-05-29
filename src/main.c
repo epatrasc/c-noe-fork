@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
         printf("P | ERROR | SIM_TIME is less then 1 or BIRTH_DEATH. Change config.\n");
         exit(EXIT_FAILURE);
     }
-    exit(EXIT_FAILURE);
+
     //init steps
     srand48(time(NULL));
     compile_child_code('A');
@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
     semctl(sem_id, 0, SETVAL, 1);
 
     // make sure child set the signal handler
-    sleep(1);
+    usleep(50000);
 
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++) {
@@ -312,7 +312,6 @@ int main(int argc, char *argv[]) {
     sigemptyset(&sa.sa_mask);
     sigaction(SIGALRM, &sa, &sa_old);
 
-    //sleep(10000);
     alarm(1);
 
     // main loop
@@ -345,9 +344,10 @@ int main(int argc, char *argv[]) {
             received = read_queue();
         }
     }
-    sleep(5);
+
+    // clean-up
     free_shmemory();
-    // Now the semaphore can be deallocated
+    del_societa();
     semctl(sem_id, 0, IPC_RMID);
 
     if (msgctl(sem_id, IPC_RMID, NULL) == -1) {
@@ -459,8 +459,7 @@ void run_child(struct individuo figlio) {
     printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
     // run execve
-    // argv[0] = program name
-    argv[0] = "c_noe_fork_child.exe"; //TODO
+    argv[0] = "c_noe_fork_child.exe";
 
     // argv[1] = child name
     argv[1] = calloc(strlen(figlio.nome) + 1, sizeof(char));
@@ -700,7 +699,6 @@ void alarm_handler(int sig) {
 
         // generate new child
         struct individuo figlio = gen_individuo();
-        figlio.tipo == 'A' ? statistics.num_type_a++ : statistics.num_type_b++;
         pid_t child_pid = fork();
 
         /* Handle error create child*/
@@ -719,6 +717,7 @@ void alarm_handler(int sig) {
         add_to_societa(figlio);
         publish_shared_data(figlio);
 
+        figlio.tipo == 'A' ? statistics.num_type_a++ : statistics.num_type_b++;
         statistics.num_birth_death++;
 
         // print stats
@@ -758,15 +757,27 @@ void print_stats() {
     struct individuo child_longest_name = search_longest_name();
     struct individuo child_highest_genoma = search_highest_genoma();
 
-    printf("P | *** STATISTIC UPDATE ***\n");
-    printf("P | num_type_a: %d\n", statistics.num_type_a);
-    printf("P | num_type_b: %d\n", statistics.num_type_b);
-    printf("P | num_birth_death: %d\n", statistics.num_birth_death);
-    printf("P | num_match_born: %d\n", statistics.num_match_born);
-    printf("P | child_longest_name: %s\n", child_longest_name.nome);
-    printf("P | child_highest_genoma: %li\n", child_highest_genoma.genoma);
-    printf("P | total population: %d\n", statistics.societa->cur_idx);
-    printf("P | *** STATISTIC END ***\n");
+    putchar ( '\n' );
+
+    printf("*** AGGIORNAMENTO STATISTICHE ***\n");
+    printf("Numero processi | A: %d , B: %d\n",
+           statistics.num_type_a, statistics.num_type_b);
+    printf("Numero di birth_death: %d\n", statistics.num_birth_death);
+    printf("Numero di match: %d\n", statistics.num_match_born);
+    printf("Processo con nome piu' lungo:\n");
+    printf("- nome: %s\n", child_longest_name.nome);
+    printf("- genoma: %lu\n", child_longest_name.genoma);
+    printf("- tipo: %c\n", child_longest_name.tipo);
+    printf("- pid: %d\n", child_longest_name.pid);
+
+    printf("Processo con genoma piu' alto:\n");
+    printf("- nome: %s\n", child_highest_genoma.nome);
+    printf("- genoma: %lu\n", child_highest_genoma.genoma);
+    printf("- tipo: %c\n", child_highest_genoma.tipo);
+    printf("- pid: %d\n", child_highest_genoma.pid);
+
+    printf("Popolazione totale: %d\n", statistics.societa->cur_idx);
+    printf("*** FINE STATISTICHE ***\n");
 }
 
 const char *getfield(char *line, int num) {

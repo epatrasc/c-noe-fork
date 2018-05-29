@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 
     // create fifo
     pid_s = calloc(sizeof(char), sizeof(pid_t));
-    sprintf(pid_s, "%d", getpid());
+    sprintf(pid_s, "%d_B", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
     // search patner
@@ -226,7 +226,7 @@ bool isForMe(unsigned long gen_a, unsigned long gen_b) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= 1) {
+    if (mcd(gen_a, gen_b) >= 2) {
         return true;
     }
 
@@ -262,7 +262,7 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     struct child_a child;
     char *pida_s = calloc(sizeof(char), sizeof(pid_t));
     char *pid_s = calloc(sizeof(char), sizeof(pid_t));
-    sprintf(pid_s, "%d", getpid());
+    sprintf(pid_s, "%d_B", getpid());
 
     // access to the child semaphore
     sem_a_id = semget(pida, 1, IPC_CREAT | 0666);
@@ -273,7 +273,7 @@ int contact_patner(int index, struct individuo my_info, int pida) {
 
     // lock resource
     semop(sem_a_id, &sem_2_l, 1);
-    printf("B1 | pid %d | took control of %d semaphore\n", getpid(), sem_a_id);
+    printf("B | pid %d | took control of %d semaphore\n", getpid(), sem_a_id);
 
     // skip dead child
     if (!isAlive(index)) {
@@ -287,12 +287,9 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     child.pid = shdata->children_a[index].pid;
     child.genoma = shdata->children_a[index].genoma;
     child.alive = shdata->children_a[index].alive;
-    printf("B |  pid: %d | child->pid: %d \n", getpid(), child.pid);
-    printf("B |  pid: %d | child->genoma: %lu \n", getpid(), child.genoma);
-    printf("B |  pid: %d | child->alive: %d \n", getpid(), child.alive);
 
     // Write message to A
-    sprintf(pida_s, "%d", child.pid);
+    sprintf(pida_s, "%d_A", child.pid);
     printf("B | pid: %d, shdata->children_a[i].pid A: %s\n", getpid(), pida_s);
 
     int fifo_a = open(pida_s, O_WRONLY);
@@ -318,10 +315,7 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
     close(fifo_b);
 
-    printf("B | num_bytes: %li\n", num_bytes);
     printf("B | PID: %d | A with pid %s has response: %s\n", getpid(), pida_s, readbuf);
-
-    printf("B | readbuf[0] == '1': %li\n", strtol(readbuf, NULL, 10));
 
     int foundMate = 0;
     if (strtol(readbuf, NULL, 10) == 1) {
@@ -332,7 +326,6 @@ int contact_patner(int index, struct individuo my_info, int pida) {
 
     free(pida_s);
     free(readbuf);
-    // Release the resource
     semop(sem_a_id, &sem_2_u, 1);
 
     return foundMate;
@@ -352,11 +345,9 @@ void setDead(int index) {
 }
 
 void exit_handler(void) {
-    printf("B | PID: %d | exit_handler \n", getpid());
     remove(pid_s);
     semop(sem_shm_id, &sem_1_u, 1);
     semop(sem_a_id, &sem_2_u, 1);
-    //abort();
 }
 
 void handle_termination(int signum) {

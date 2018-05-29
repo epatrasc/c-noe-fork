@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 
     //create fifo
     pid_s = calloc(sizeof(char), sizeof(pid_t));
-    sprintf(pid_s, "%d", getpid());
+    sprintf(pid_s, "%d_A", getpid());
     mkfifo(pid_s, S_IRUSR | S_IWUSR);
 
     int BUF_SIZE = 1024;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
         unsigned long genoma_b;
 
         token = strsep(&readbuf, ",");
-        sprintf(pid_b, "%s", token);
+        sprintf(pid_b, "%s_B", token);
         token = strsep(&readbuf, ",");
         nome_b = calloc(sizeof(char), strlen(token));
         sprintf(nome_b, "%s", token);
@@ -236,9 +236,6 @@ void handle_termination(int signum) {
 }
 
 void exit_handler(void) {
-    printf("A | PID: %d | exit_handler \n", getpid());
-
     remove(pid_s);
-
     semctl(sem_id, 0, IPC_RMID, 0);
 }
