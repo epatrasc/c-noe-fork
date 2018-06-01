@@ -204,11 +204,11 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < shdata->cur_idx; i++) {
         struct child_a child = shdata->children_a[i];
-        printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
+        // printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
     }
     //creat sem to sync shared memory
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
-    printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
+    // printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
 
     // make sure child set the signal handler
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 
     // send signal to wake up all the children
     for (int i = 0; i < INIT_PEOPLE; i++) {
-        printf("P | Sending SIGUSR1 to the child %d...\n", societa.individui[i].pid);
+        // printf("P | Sending SIGUSR1 to the child %d...\n", societa.individui[i].pid);
         kill(societa.individui[i].pid, SIGUSR1);
     }
     struct sigaction sa, sa_old;
@@ -230,17 +230,17 @@ int main(int argc, char *argv[]) {
     // main loop
     int wstatus;
     int cnt_kill = 0;
-    while ((child_pid = wait(&wstatus)) > 0) {
+    while (((child_pid = wait(&wstatus)) > 0) || !end_simulation) {
         cnt_kill++;
         if (child_pid <= 0) {
             usleep(50000);
             continue;
         }
-        printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
+        // printf("P | Ended child : %d | status: %d \n", child_pid, wstatus);
 
         // update alive
         int index = get_index_by_pid(child_pid, societa);
-        printf("P | index: %d\n", index);
+        // printf("P | index: %d\n", index);
 
         if (index > -1) societa.individui[index].alive = 0;
 
@@ -256,16 +256,14 @@ int main(int argc, char *argv[]) {
             mate_and_fork(a, b);
             received = read_queue();
         }
+        child_pid = -1;
     }
 
     // clean-up
     free_shmemory();
     del_societa();
     semctl(sem_id, 0, IPC_RMID);
-
-    if (msgctl(sem_id, IPC_RMID, NULL) == -1) {
-        fprintf(stderr, "P | Message queue could not be deleted.\n");
-    }
+    msgctl(sem_id, IPC_RMID, NULL);
 
     printf("\n ---> PARENT END | pid: %d <---\n", getpid());
     exit(EXIT_SUCCESS);
@@ -281,21 +279,21 @@ struct message read_queue() {
     int mreturn = -1;
     if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
         if (errno != ENOMSG) {
-            printf("P | msgrcv errno: %d | Retry...\n", errno);
+            // printf("P | msgrcv errno: %d | Retry...\n", errno);
             usleep(50000);//50 ms
             if ((mreturn = msgrcv(msgid, &msgbuffer, sizeof(msgbuffer), 0, IPC_NOWAIT)) == -1) {
-                printf("P | msgrcv errno: %d \n", errno);
+                // printf("P | msgrcv errno: %d \n", errno);
             }
         }
 
         if (errno == ENOMSG) {
-            printf("P | errno: %d | NO MESSAGE QUEUE\n", errno);
+            // printf("P | errno: %d | NO MESSAGE QUEUE\n", errno);
         }
     }
 
     pid_t sender = msgbuffer.mtext.pid_sender;
     pid_t match = msgbuffer.mtext.pid_match;
-    printf("P | QUEUE MSG | sender: %d | match: %d\n", sender, match);
+    // printf("P | QUEUE MSG | sender: %d | match: %d\n", sender, match);
 
     return msgbuffer.mtext;
 }
@@ -307,9 +305,9 @@ unsigned long gen_genoma(unsigned long min, unsigned long max) {
 char *gen_name(char *name) {
     int new_length = (int) (strlen(name) + 2);
     char *new_name = calloc(sizeof(char), new_length);
-    printf("P | gen_name name: %s\n", name);
+    
     sprintf(new_name, "%s%c", name, (char) rand_interval(MIN_CHAR, MAX_CHAR));
-    printf("P | gen_name new_name: %s\n", new_name);
+    
     return new_name;
 }
 
@@ -341,15 +339,9 @@ struct individuo gen_individuo_erede(struct individuo a, struct individuo b) {
     new_child.genoma = gen_genoma(x, x + GENES);
     new_child.alive = true;
 
-
-    printf("P | gen_individuo_erede a.nome: %s\n", a.nome);
-    printf("P | gen_individuo_erede a.genoma: %lu\n", a.genoma);
-    printf("P | gen_individuo_erede b.nome: %s\n", b.nome);
-    printf("P | gen_individuo_erede b.genoma: %lu\n", b.genoma);
-    printf("P | gen_individuo_erede x: %lu\n", x);
-    printf("P | new_child.tipo: %c\n", new_child.tipo);
-    printf("P | new_child.nome: %s\n", new_child.nome);
-    printf("P | new_child.genoma: %lu\n", new_child.genoma);
+    // printf("P | new_child.tipo: %c\n", new_child.tipo);
+    // printf("P | new_child.nome: %s\n", new_child.nome);
+    // printf("P | new_child.genoma: %lu\n", new_child.genoma);
 
     return new_child;
 }
@@ -358,7 +350,7 @@ void run_child(struct individuo figlio) {
     int error = 0;
     char *argv[] = {NULL, NULL, NULL, NULL};
 
-    printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
+    // printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
     // run execve
     argv[0] = "c_noe_fork_child.exe";
@@ -408,7 +400,7 @@ void publish_shared_data(struct individuo figlio) {
 /****** UTILS ******/
 static void wake_up_process(int signo) {
     if (signo == SIGUSR1) {
-        printf("P | WAKEUP  process %d | received signal SIGUSR1\n", getpid());
+        // printf("P | WAKEUP  process %d | received signal SIGUSR1\n", getpid());
     }
 }
 
@@ -416,7 +408,7 @@ unsigned int compile_child_code(char type) {
     char *file[] = {"gcc ./src/child_a.c ./exec/library.o -o ./exec/child_a.exe", "gcc ./src/child_b.c ./exec/library.o -o ./exec/child_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
 
-    printf("P | COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
+    // printf("P | COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
 
     return status;
 }
@@ -446,7 +438,7 @@ void mate_and_fork(struct individuo a, struct individuo b) {
     struct individuo new_born;
     pid_t child_pid;
 
-    printf("P | mate_and_fork \n");
+    // printf("P | mate_and_fork \n");
 
     new_born = gen_individuo_erede(a, b);
 
@@ -461,7 +453,7 @@ void mate_and_fork(struct individuo a, struct individuo b) {
         exit(EXIT_FAILURE);
     }
 
-    printf("P | mate_and_fork CHILD BORN: %d %c\n", child_pid, new_born.tipo);
+    // printf("P | mate_and_fork CHILD BORN: %d %c\n", child_pid, new_born.tipo);
 
     /* Perform actions specific to parent */
     new_born.pid = child_pid;
@@ -531,7 +523,7 @@ int pick_random_process() {
 }
 
 void alarm_handler(int sig) {
-    printf("P | signal: %d | Seconds to end sim: %d\n", sig, --time_sim_remain);
+    printf("P | signal: %d | Seconds to end sim: %d\n", sig, time_sim_remain--);
 
     if (trigger_end_sim == SIM_TIME) {
         printf("P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim\n");
@@ -567,7 +559,7 @@ void alarm_handler(int sig) {
             exit(EXIT_FAILURE);
         }
 
-        printf("P | CHILD BORN: %d %c\n", child_pid, figlio.tipo);
+        // printf("P | CHILD BORN: %d %c\n", child_pid, figlio.tipo);
 
         /* Perform actions specific to parent */
         figlio.pid = child_pid;
@@ -621,18 +613,18 @@ void print_stats() {
            statistics.num_type_a, statistics.num_type_b);
     printf("Numero di birth_death: %d\n", statistics.num_birth_death);
     printf("Numero di match: %d\n", statistics.num_match_born);
-    printf("Processo con nome piu' lungo:\n");
+    
+    printf("\nProcesso con nome piu' lungo:\n");
     printf("- nome: %s\n", child_longest_name.nome);
     printf("- genoma: %lu\n", child_longest_name.genoma);
     printf("- tipo: %c\n", child_longest_name.tipo);
     printf("- pid: %d\n", child_longest_name.pid);
 
-    printf("Processo con genoma piu' alto:\n");
+    printf("\nProcesso con genoma piu' alto:\n");
     printf("- nome: %s\n", child_highest_genoma.nome);
     printf("- genoma: %lu\n", child_highest_genoma.genoma);
     printf("- tipo: %c\n", child_highest_genoma.tipo);
     printf("- pid: %d\n", child_highest_genoma.pid);
 
-    printf("Popolazione totale: %d\n", statistics.societa->cur_idx);
     printf("*** FINE STATISTICHE ***\n");
 }
