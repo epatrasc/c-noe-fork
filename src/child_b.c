@@ -1,58 +1,4 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <errno.h>
-#include <string.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/msg.h>
-#include <sys/file.h>
-#include <sys/sem.h>
-
-#define TEST_ERROR    if (errno) {fprintf(stderr, \
-                       "%s:%d: PID=%5d: Error %d (%s)\n",\
-                       __FILE__,\
-                       __LINE__,\
-                       getpid(),\
-                       errno,\
-                       strerror(errno));}
-
-struct individuo {
-    char tipo;
-    char *nome;
-    unsigned long genoma;
-    pid_t pid;
-    bool alive;
-};
-
-struct message {
-    pid_t pid_sender;
-    pid_t pid_match;
-};
-
-struct msgbuf {
-    long mtype;             /* message type, must be > 0 */
-    struct message mtext;    /* message data */
-};
-
-struct child_a {
-    unsigned long genoma;
-    pid_t pid;
-    bool alive;
-};
-
-struct shared_data {
-    unsigned long cur_idx;
-    struct child_a children_a[];
-};
-
-int mcd(unsigned long a, unsigned long b);
+#include "library.h"
 
 bool isForMe(unsigned long gen_a, unsigned long gen_b);
 
@@ -72,6 +18,7 @@ int contact_patner(int index, struct individuo my_info, int pida);
 
 void handle_termination(int signum);
 
+void timeout_handler(int signum);
 
 // Global variable
 const int SHMFLG = IPC_CREAT | 0666;
@@ -90,7 +37,7 @@ volatile sig_atomic_t done = 0;
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
-    struct sigaction action;
+    struct sigaction action, sa, sa_old;
 
     atexit(exit_handler);
     memset(&action, 0, sizeof(struct sigaction));
@@ -98,6 +45,12 @@ int main(int argc, char *argv[]) {
     action.sa_flags = SA_RESTART;
     sigaction(SIGTERM, &action, NULL);
     sigemptyset(&action.sa_mask);
+
+    // mask timeout alarm
+    sa.sa_handler = &timeout_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, &sa_old);
 
     printf("\n ---> CHILD B START | pid: %d <---\n", getpid());
     if (argc < 2) {
@@ -210,23 +163,12 @@ void open_shmemory() {
     }
 }
 
-int mcd(unsigned long a, unsigned long b) {
-    int remainder;
-    while (b != 0) {
-        remainder = a % b;
-
-        a = b;
-        b = remainder;
-    }
-    return a;
-}
-
 bool isForMe(unsigned long gen_a, unsigned long gen_b) {
     if (gen_a % gen_b == 0) {
         return true;
     }
 
-    if (mcd(gen_a, gen_b) >= 2) {
+    if (mcd(gen_a, gen_b) >= 5) {
         return true;
     }
 
@@ -292,12 +234,14 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     sprintf(pida_s, "%d_A", child.pid);
     printf("B | pid: %d, shdata->children_a[i].pid A: %s\n", getpid(), pida_s);
 
-    int fifo_a = open(pida_s, O_WRONLY);
-    if (fifo_a == -1) {
+    alarm(5);
+    int fifo_a = -1;
+    if ((fifo_a = open(pida_s, O_WRONLY)) == -1) {
         // unlock resource
         semop(sem_a_id, &sem_2_u, 1);
         return -1;
     }
+    alarm(0);
 
     printf("B | PID: %d | writing to A: start\n", getpid());
     char *my_msg = calloc(sizeof(char), 1024);
@@ -311,7 +255,15 @@ int contact_patner(int index, struct individuo my_info, int pida) {
     printf("B | PID: %d | reading response from A...\n", getpid());
     int BUF_SIZE = 1024;
     char *readbuf = calloc(sizeof(char), BUF_SIZE);
-    int fifo_b = open(pid_s, O_RDONLY);
+    int fifo_b = -1;
+    alarm(5);
+    if ((fifo_b = open(pid_s, O_RDONLY)) == -1) {
+        // unlock resource
+        semop(sem_a_id, &sem_2_u, 1);
+        return -1;
+    }
+    alarm(0);
+
     ssize_t num_bytes = read(fifo_b, readbuf, BUF_SIZE);
     close(fifo_b);
 
@@ -353,5 +305,10 @@ void exit_handler(void) {
 void handle_termination(int signum) {
     extern int sem_shm_id, sem_a_id;
     printf("B | pid: %d | SIGTERM recevived\n", getpid());
+    done = 1;
+}
+
+void timeout_handler(int signum) {
+    printf("B | pid: %d | timeout ALARM recevived\n", getpid());
     done = 1;
 }

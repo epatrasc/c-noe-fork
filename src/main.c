@@ -1,83 +1,4 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <time.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <sys/msg.h>
-#include <sys/sem.h>
-
-#define die(msg_error)      \
-    do                      \
-    {                       \
-        fprintf(stderr, "\n%s: %d. Error #%03d: %s\n", __FILE__, __LINE__, errno, strerror(errno));\
-    } while (0);
-
-#define TEST_ERROR                                 \
-    if (errno)                                     \
-    {                                              \
-        dprintf(STDERR_FILENO,                     \
-                "%s:%d: PID=%5d: Error %d (%s)\n", \
-                __FILE__,                          \
-                __LINE__,                          \
-                getpid(),                          \
-                errno,                             \
-                strerror(errno));                  \
-    }
-
-#define DEBUG_LINE                                \
-    printf("P | DEBUG %s:%d: PID=%5d\n", __FILE__, __LINE__, getpid());
-
-struct individuo {
-    char tipo;
-    char *nome;
-    unsigned long genoma;
-    pid_t pid;
-    bool alive;
-};
-
-struct message {
-    pid_t pid_sender;
-    pid_t pid_match;
-};
-
-struct msgbuf {
-    long mtype;             /* message type, must be > 0 */
-    struct message mtext;    /* message data */
-};
-
-struct popolazione {
-    size_t size;
-    unsigned int cur_idx;
-    struct individuo *individui;
-};
-
-struct child_a {
-    unsigned long genoma;
-    pid_t pid;
-    bool alive;
-};
-
-struct shared_data {
-    unsigned long cur_idx;
-    struct child_a children_a[];
-};
-
-struct stats {
-    int num_type_a;
-    int num_type_b;
-    int num_birth_death;
-    int num_match_born;
-    struct popolazione *societa;
-};
+#include "library.h"
 
 unsigned long gen_genoma(unsigned long min, unsigned long max);
 
@@ -93,21 +14,9 @@ void mate_and_fork(struct individuo a, struct individuo b);
 
 void run_child(struct individuo figlio);
 
-unsigned int rand_interval(unsigned int min, unsigned int max);
-
-unsigned long rand_interval_lu(unsigned long min, unsigned long max);
-
-int len_of(int x);
-
-unsigned long mcd(unsigned long a, unsigned long b);
-
 static void wake_up_process(int signo);
 
 unsigned int compile_child_code(char type);
-
-void init_shmemory();
-
-void free_shmemory();
 
 void init_stats();
 
@@ -131,11 +40,13 @@ struct message read_queue();
 
 void alarm_handler(int sig);
 
+void init_shmemory();
+
+void free_shmemory();
+
 struct individuo search_longest_name();
 
 struct individuo search_highest_genoma();
-
-const char *getfield(char *line, int num);
 
 //costants
 const int MIN_CHAR = 65; // A
@@ -155,6 +66,7 @@ int trigger_birth_death = 0;
 int trigger_end_sim = 0;
 struct sembuf sem_1_l = {0, -1, 0};
 struct sembuf sem_1_u = {0, 1, 0};
+int time_sim_remain = 0;
 
 // Input arguments;
 unsigned int INIT_PEOPLE = 10; // number of inital children
@@ -255,6 +167,7 @@ int main(int argc, char *argv[]) {
     init_societa(INIT_PEOPLE);
     init_stats();
     init_shmemory();
+    time_sim_remain = SIM_TIME;
 
     //init population
     pid_t child_pid;
@@ -441,17 +354,6 @@ struct individuo gen_individuo_erede(struct individuo a, struct individuo b) {
     return new_child;
 }
 
-unsigned long mcd(unsigned long a, unsigned long b) {
-    int remainder;
-    while (b != 0) {
-        remainder = a % b;
-
-        a = b;
-        b = remainder;
-    }
-    return a;
-}
-
 void run_child(struct individuo figlio) {
     int error = 0;
     char *argv[] = {NULL, NULL, NULL, NULL};
@@ -510,58 +412,13 @@ static void wake_up_process(int signo) {
     }
 }
 
-unsigned int rand_interval(unsigned int min, unsigned int max) {
-    // reference https://stackoverflow.com/a/17554531
-    unsigned int r;
-    const unsigned int range = 1 + max - min;
-    const unsigned int buckets = RAND_MAX / range;
-    const unsigned int limit = buckets * range;
-
-    /* Create equal size buckets all in a row, then fire randomly towards
-     * the buckets until you land in one of them. All buckets are equally
-     * likely. If you land off the end of the line of buckets, try again. */
-    do {
-        r = lrand48();
-    } while (r >= limit);
-
-    return min + (r / buckets);
-}
-
-unsigned long rand_interval_lu(unsigned long min, unsigned long max) {
-    // reference https://stackoverflow.com/a/17554531
-    unsigned long r;
-    const unsigned long range = 1 + max - min;
-    const unsigned long buckets = RAND_MAX / range;
-    const unsigned long limit = buckets * range;
-
-    /* Create equal size buckets all in a row, then fire randomly towards
-     * the buckets until you land in one of them. All buckets are equally
-     * likely. If you land off the end of the line of buckets, try again. */
-    do {
-        r = lrand48();
-    } while (r >= limit);
-
-    return min + (r / buckets);
-}
-
 unsigned int compile_child_code(char type) {
-    char *file[] = {"gcc ./src/child_a.c -o ./exec/child_a.exe", "gcc ./src/child_b.c -o ./exec/child_b.exe"};
+    char *file[] = {"gcc ./src/child_a.c ./exec/library.o -o ./exec/child_a.exe", "gcc ./src/child_b.c ./exec/library.o -o ./exec/child_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
 
     printf("P | COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
 
     return status;
-}
-
-int len_of(int value) {
-    int l = 1;
-
-    while (value > 9) {
-        l++;
-        value /= 10;
-    }
-
-    return l;
 }
 
 int get_index_by_pid(int pid, struct popolazione societa) {
@@ -674,7 +531,7 @@ int pick_random_process() {
 }
 
 void alarm_handler(int sig) {
-    printf("P | alarm_handler signal: %d\n", sig);
+    printf("P | signal: %d | Seconds to end sim: %d\n", sig, --time_sim_remain);
 
     if (trigger_end_sim == SIM_TIME) {
         printf("P | ---> END SIMULAZIONE <--- | alarm_handler: trigger_end_sim\n");
@@ -778,15 +635,4 @@ void print_stats() {
 
     printf("Popolazione totale: %d\n", statistics.societa->cur_idx);
     printf("*** FINE STATISTICHE ***\n");
-}
-
-const char *getfield(char *line, int num) {
-    const char *tok;
-    for (tok = strtok(line, ";");
-         tok && *tok;
-         tok = strtok(NULL, ";\n")) {
-        if (!--num)
-            return tok;
-    }
-    return NULL;
 }

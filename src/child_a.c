@@ -1,50 +1,12 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <errno.h>
-#include <string.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/msg.h>
-#include <sys/sem.h>
-
-#define TEST_ERROR    if (errno) {fprintf(stderr, \
-                       "%s:%d: PID=%5d: Error %d (%s)\n",\
-                       __FILE__,\
-                       __LINE__,\
-                       getpid(),\
-                       errno,\
-                       strerror(errno));}
-
-struct individuo {
-    char tipo;
-    char *nome;
-    unsigned long genoma;
-};
-
-struct message {
-    pid_t pid_sender;
-    pid_t pid_match;
-};
-
-struct msgbuf {
-    long mtype;             /* message type, must be > 0 */
-    struct message mtext;    /* message data */
-};
-
-int mcd(unsigned long a, unsigned long b);
+#include "library.h"
 
 bool isGood(unsigned long gen_a, unsigned long gen_b);
 
 void send_msg_parent(pid_t pid_b);
 
 void handle_termination(int signum);
+
+void timeout_handler(int signum);
 
 void exit_handler(void);
 
@@ -57,13 +19,22 @@ volatile sig_atomic_t done = 0;
 
 int main(int argc, char *argv[]) {
     struct individuo my_info;
-    struct sigaction action;
+    struct sigaction action, sa, sa_old;
 
     memset(&action, 0, sizeof(struct sigaction));
+
+    // mask SIGTERM
     action.sa_handler = &handle_termination;
     action.sa_flags = SA_RESTART;
     sigaction(SIGTERM, &action, NULL);
     sigemptyset(&action.sa_mask);
+
+    // mask timeout alarm
+    sa.sa_handler = &timeout_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, &sa_old);
+
     atexit(exit_handler);
 
     printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
@@ -101,11 +72,14 @@ int main(int argc, char *argv[]) {
 
     printf("A | waiting for type b request...\n");
     while (!done) {
+        alarm(5);
         if ((fifo_a = open(pid_s, O_RDONLY)) < 0) {
             usleep(10000);
             continue;
         }
 
+        alarm(0);
+        
         printf("A | fifo_a opened\n");
 
         char *readbuf = calloc(sizeof(char), BUF_SIZE);
@@ -170,17 +144,6 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
 }
 
-int mcd(unsigned long a, unsigned long b) {
-    int remainder;
-    while (b != 0) {
-        remainder = a % b;
-
-        a = b;
-        b = remainder;
-    }
-    return a;
-}
-
 bool isGood(unsigned long gen_a, unsigned long gen_b) {
     if (gen_a % gen_b == 0) return true;
     if (mcd(gen_a, gen_b) >= selection_level) return true;
@@ -232,6 +195,11 @@ void send_msg_parent(int pid_b) {
 
 void handle_termination(int signum) {
     printf("A | pid: %d | SIGTERM recevived\n", getpid());
+    done = 1;
+}
+
+void timeout_handler(int signum) {
+    printf("A | pid: %d | timeout ALARM recevived\n", getpid());
     done = 1;
 }
 
