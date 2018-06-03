@@ -363,7 +363,7 @@ void run_child(struct individuo figlio) {
     argv[2] = calloc(len_of(figlio.genoma) + 1, sizeof(char));
     sprintf(argv[2], "%lu", figlio.genoma);
 
-    error = execv(figlio.tipo == 'A' ? "./exec/child_a.exe" : "./exec/child_b.exe", argv);
+    error = execv(figlio.tipo == 'A' ? "./exec/individuo_a.exe" : "./exec/individuo_b.exe", argv);
 
     // if here i'm in error
     if (error < 0) {
@@ -405,7 +405,7 @@ static void wake_up_process(int signo) {
 }
 
 unsigned int compile_child_code(char type) {
-    char *file[] = {"gcc ./src/child_a.c ./exec/library.o -o ./exec/child_a.exe", "gcc ./src/child_b.c ./exec/library.o -o ./exec/child_b.exe"};
+    char *file[] = {"gcc ./src/individuo_a.c ./exec/library.o -o ./exec/individuo_a.exe", "gcc ./src/individuo_b.c ./exec/library.o -o ./exec/individuo_b.exe"};
     int status = system(type == 'A' ? file[0] : file[1]);
 
     // printf("P | COMPILE TYPE FILE: %c | terminated with exit status %d\n", type, status);
