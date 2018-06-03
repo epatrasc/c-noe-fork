@@ -98,8 +98,6 @@ int main(int argc, char *argv[]) {
             if (foundMate == 1) {
                 // printf("B | PID: %d, patner ha accettato: %d\n", getpid(), pida);
                 send_msg_to_gestore(pida);
-            } else {
-                // printf("B | PID: %d, patner NON ha accettato: %d\n", getpid(), pida);
             }
         }
         usleep(50000);

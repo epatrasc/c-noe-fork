@@ -202,14 +202,16 @@ int main(int argc, char *argv[]) {
     }
     printf("P | CHILD Generation END\n");
 
-    for (int i = 0; i < shdata->cur_idx; i++) {
-        struct child_a child = shdata->children_a[i];
-        // printf("P | GESTORE pid: %d | [%d] child_a pid: %d \n", getpid(), i, child.pid);
-    }
     //creat sem to sync shared memory
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
     // printf("P | pid %d | sem_a_id: %d\n", getpid(), sem_id);
     semctl(sem_id, 0, SETVAL, 1);
+
+    struct sigaction sa, sa_old;
+    sa.sa_handler = &alarm_handler;
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, &sa_old);
 
     // make sure child set the signal handler
     usleep(50000);
@@ -219,12 +221,8 @@ int main(int argc, char *argv[]) {
         // printf("P | Sending SIGUSR1 to the child %d...\n", societa.individui[i].pid);
         kill(societa.individui[i].pid, SIGUSR1);
     }
-    struct sigaction sa, sa_old;
-    sa.sa_handler = &alarm_handler;
-    sa.sa_flags = SA_RESTART;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGALRM, &sa, &sa_old);
 
+    // start simulation
     alarm(1);
 
     // main loop
@@ -352,7 +350,7 @@ void run_child(struct individuo figlio) {
 
     // printf("CHILD -> NAME: %s | TYPE: %c | GENOMA: %lu \n", figlio.nome, figlio.tipo, figlio.genoma);
 
-    // run execve
+    // run execv
     argv[0] = "c_noe_fork_child.exe";
 
     // argv[1] = child name

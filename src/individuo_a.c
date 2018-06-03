@@ -11,7 +11,7 @@ void timeout_handler(int signum);
 void exit_handler(void);
 
 // Global variable
-int sem_id, fifo_a = -1, selection_level = 5;
+int sem_id, fifo_a = -1, selection_level = 10;
 char *pid_b, *pid_s;
 
 // handle termination
@@ -20,6 +20,15 @@ volatile sig_atomic_t done = 0;
 int main(int argc, char *argv[]) {
     struct individuo my_info;
     struct sigaction action, sa, sa_old;
+
+    // printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
+    if (argc < 3) {
+        // printf("A | I need name and genoma input from argv. \n");
+        // for (int i = 0; i < argc; i++) {
+        //     printf("A | arg[%d]: %s \n ", i, argv[i]);
+        // }
+        exit(EXIT_FAILURE);
+    }
 
     memset(&action, 0, sizeof(struct sigaction));
 
@@ -36,15 +45,6 @@ int main(int argc, char *argv[]) {
     sigaction(SIGALRM, &sa, &sa_old);
 
     atexit(exit_handler);
-
-    // printf("\n ---> CHILD A START | pid: %d | argc: %d <---\n", getpid(), argc);
-    if (argc < 3) {
-        // printf("A | I need name and genoma input from argv. \n");
-        for (int i = 0; i < argc; i++) {
-            // printf("A | arg[%d]: %s \n ", i, argv[i]);
-        }
-        exit(EXIT_FAILURE);
-    }
 
     //creat sem 
     sem_id = semget(getpid(), 1, IPC_CREAT | 0666);
@@ -101,11 +101,6 @@ int main(int argc, char *argv[]) {
         nome_b = calloc(sizeof(char), strlen(token));
         sprintf(nome_b, "%s", token);
         genoma_b = (unsigned long) strtol(strsep(&readbuf, ","), NULL, 10);
-        //free(readbuf);
-        // if(nome_b != NULL) free(nome_b);
-        // TEST_ERROR;
-        // if(token != NULL) free(token);
-        // TEST_ERROR;
 
         // printf("A | pid_b:%s\n", pid_b);
         // printf("A | nome_b:%s\n", nome_b);
